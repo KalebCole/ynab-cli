@@ -1,0 +1,88 @@
+import { Command } from 'commander';
+import { client } from '../lib/api-client.js';
+import { outputSuccess, outputSuccessWithServerKnowledge } from '../lib/output.js';
+import { YnabCliError } from '../lib/errors.js';
+import { amountToMilliunits } from '../lib/utils.js';
+import { withErrorHandling } from '../lib/command-utils.js';
+import type { CommandOptions } from '../types/index.js';
+
+export function createCategoriesCommand(): Command {
+  const cmd = new Command('categories').description('Category operations');
+
+  cmd
+    .command('list')
+    .description('List all categories')
+    .option('-b, --budget <id>', 'Budget ID')
+    .option('--last-knowledge <number>', 'Last knowledge of server', parseInt)
+    .action(withErrorHandling(async (options: { budget?: string; lastKnowledge?: number } & CommandOptions) => {
+      const result = await client.getCategories(options.budget, options.lastKnowledge);
+      outputSuccessWithServerKnowledge(result?.category_groups, result?.server_knowledge);
+    }));
+
+  cmd
+    .command('view')
+    .description('View category details')
+    .argument('<id>', 'Category ID')
+    .option('-b, --budget <id>', 'Budget ID')
+    .action(withErrorHandling(async (id: string, options: CommandOptions) => {
+      const category = await client.getCategory(id, options.budget);
+      outputSuccess(category);
+    }));
+
+  cmd
+    .command('budget')
+    .description('Update category budget for a month')
+    .argument('<id>', 'Category ID')
+    .requiredOption('--month <month>', 'Month in YYYY-MM format')
+    .requiredOption('--amount <amount>', 'Budget amount in currency units (e.g., 100.50)', parseFloat)
+    .option('-b, --budget <id>', 'Budget ID')
+    .action(withErrorHandling(async (
+      id: string,
+      options: {
+        month: string;
+        amount: number;
+        budget?: string;
+      } & CommandOptions,
+    ) => {
+      if (isNaN(options.amount)) {
+        throw new YnabCliError('Amount must be a valid number', 400);
+      }
+
+      const milliunits = amountToMilliunits(options.amount);
+      const category = await client.updateMonthCategory(
+        options.month,
+        id,
+        { category: { budgeted: milliunits } },
+        options.budget,
+      );
+      outputSuccess(category);
+    }));
+
+  cmd
+    .command('transactions')
+    .description('List transactions for category')
+    .argument('<id>', 'Category ID')
+    .option('-b, --budget <id>', 'Budget ID')
+    .option('--since <date>', 'Filter transactions since date (YYYY-MM-DD)')
+    .option('--type <type>', 'Filter by transaction type')
+    .option('--last-knowledge <number>', 'Last knowledge of server', parseInt)
+    .action(withErrorHandling(async (
+      id: string,
+      options: {
+        budget?: string;
+        since?: string;
+        type?: string;
+        lastKnowledge?: number;
+      } & CommandOptions,
+    ) => {
+      const result = await client.getTransactionsByCategory(id, {
+        budgetId: options.budget,
+        sinceDate: options.since,
+        type: options.type,
+        lastKnowledgeOfServer: options.lastKnowledge,
+      });
+      outputSuccessWithServerKnowledge(result?.transactions, result?.server_knowledge);
+    }));
+
+  return cmd;
+}

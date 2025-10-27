@@ -1,0 +1,58 @@
+import { Command } from 'commander';
+import { auth } from '../lib/auth.js';
+import { promptForAccessToken } from '../lib/prompts.js';
+import { outputJson, outputSuccess } from '../lib/output.js';
+import { client } from '../lib/api-client.js';
+import { withErrorHandling } from '../lib/command-utils.js';
+
+export function createAuthCommand(): Command {
+  const cmd = new Command('auth').description('Authentication management');
+
+  cmd
+    .command('login')
+    .description('Configure access token')
+    .action(withErrorHandling(async () => {
+      const token = await promptForAccessToken();
+      await auth.setAccessToken(token);
+
+      try {
+        const user = await client.getUser();
+        outputSuccess({
+          message: 'Successfully authenticated',
+          user: { id: user?.id },
+        });
+      } catch (error) {
+        await auth.deleteAccessToken();
+        throw error;
+      }
+    }));
+
+  cmd
+    .command('status')
+    .description('Check authentication status')
+    .action(withErrorHandling(async () => {
+      const isAuthenticated = await auth.isAuthenticated();
+
+      if (!isAuthenticated) {
+        outputJson({ authenticated: false, message: 'Not authenticated' });
+        return;
+      }
+
+      try {
+        const user = await client.getUser();
+        outputSuccess({ authenticated: true, user: { id: user?.id } });
+      } catch (error) {
+        outputJson({ authenticated: false, message: 'Token exists but is invalid' });
+      }
+    }));
+
+  cmd
+    .command('logout')
+    .description('Remove stored credentials')
+    .action(withErrorHandling(async () => {
+      await auth.logout();
+      outputSuccess({ message: 'Successfully logged out' });
+    }));
+
+  return cmd;
+}
