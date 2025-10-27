@@ -4,7 +4,6 @@ import { config } from '../lib/config.js';
 import { outputSuccess, outputSuccessWithServerKnowledge } from '../lib/output.js';
 import { YnabCliError } from '../lib/errors.js';
 import { withErrorHandling } from '../lib/command-utils.js';
-import type { CommandOptions } from '../types/index.js';
 
 export function createBudgetsCommand(): Command {
   const cmd = new Command('budgets').description('Budget operations');
@@ -22,9 +21,8 @@ export function createBudgetsCommand(): Command {
     .command('view')
     .description('View budget details (uses default if no id provided)')
     .argument('[id]', 'Budget ID')
-    .option('--last-knowledge <number>', 'Last knowledge of server', parseInt)
-    .action(withErrorHandling(async (id: string | undefined, options: { lastKnowledge?: number } & CommandOptions) => {
-      const result = await client.getBudget(id, options.lastKnowledge);
+    .action(withErrorHandling(async (id: string | undefined) => {
+      const result = await client.getBudget(id);
       outputSuccessWithServerKnowledge(result?.budget, result?.server_knowledge);
     }));
 

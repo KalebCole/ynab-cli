@@ -11,9 +11,8 @@ export function createAccountsCommand(): Command {
     .command('list')
     .description('List all accounts')
     .option('-b, --budget <id>', 'Budget ID')
-    .option('--last-knowledge <number>', 'Last knowledge of server', parseInt)
-    .action(withErrorHandling(async (options: { budget?: string; lastKnowledge?: number } & CommandOptions) => {
-      const result = await client.getAccounts(options.budget, options.lastKnowledge);
+    .action(withErrorHandling(async (options: CommandOptions) => {
+      const result = await client.getAccounts(options.budget);
       outputSuccessWithServerKnowledge(result?.accounts, result?.server_knowledge);
     }));
 
@@ -34,21 +33,18 @@ export function createAccountsCommand(): Command {
     .option('-b, --budget <id>', 'Budget ID')
     .option('--since <date>', 'Filter transactions since date (YYYY-MM-DD)')
     .option('--type <type>', 'Filter by transaction type')
-    .option('--last-knowledge <number>', 'Last knowledge of server', parseInt)
     .action(withErrorHandling(async (
       id: string,
       options: {
         budget?: string;
         since?: string;
         type?: string;
-        lastKnowledge?: number;
       } & CommandOptions,
     ) => {
       const result = await client.getTransactionsByAccount(id, {
         budgetId: options.budget,
         sinceDate: options.since,
         type: options.type,
-        lastKnowledgeOfServer: options.lastKnowledge,
       });
       outputSuccessWithServerKnowledge(result?.transactions, result?.server_knowledge);
     }));

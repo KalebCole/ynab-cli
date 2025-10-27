@@ -5,6 +5,7 @@ A command-line interface for You Need a Budget (YNAB) designed to enable LLMs (C
 ## Features
 
 - **LLM-First Design**: JSON output by default for easy parsing and integration with AI assistants
+- **Advanced Filtering**: Built-in filters reduce need for external tools like `jq` - filter by approval status, amount ranges, field selection, and search capabilities
 - **Comprehensive Coverage**: Support for all major YNAB API endpoints
 - **Type Safety**: Built with TypeScript for robust error handling
 - **Raw API Access**: Fallback command for any operation not covered by convenience commands
@@ -89,8 +90,25 @@ ynab transactions list                          # List recent transactions
 ynab transactions list --account <id>           # Filter by account
 ynab transactions list --category <id>          # Filter by category
 ynab transactions list --payee <id>             # Filter by payee
-ynab transactions list --month <YYYY-MM>        # Filter by month
 ynab transactions list --since <YYYY-MM-DD>     # Filter since date
+ynab transactions list --until <YYYY-MM-DD>     # Filter until date
+
+# Advanced filtering (LLM-friendly)
+ynab transactions list --approved=false                                      # Only unapproved transactions
+ynab transactions list --approved=true                                       # Only approved transactions
+ynab transactions list --min-amount 100 --max-amount 500                     # Filter by amount range
+ynab transactions list --since 2025-10-01 --until 2025-10-31                 # Date range filtering
+ynab transactions list --status=cleared                                      # Only cleared transactions
+ynab transactions list --status=cleared,reconciled                           # Multiple statuses
+ynab transactions list --fields id,date,amount,memo                          # Select specific fields
+ynab transactions list --approved=false --min-amount 50 --fields date,amount,payee_name
+
+# Search transactions
+ynab transactions search --memo "coffee"                                     # Search by memo text
+ynab transactions search --payee-name "Amazon"                               # Search by payee name
+ynab transactions search --amount 42.50                                      # Search by exact amount
+ynab transactions search --memo "groceries" --since 2025-10-01               # Combine with date filter
+ynab transactions search --payee-name "Amazon" --approved=true --fields date,amount,memo
 
 # CRUD operations
 ynab transactions view <id>                     # View single transaction
@@ -152,6 +170,34 @@ ynab transactions list --since 2025-10-01
 ynab transactions list --since 2025-10-01 --compact
 ```
 
+### Find unapproved transactions over $100
+
+```bash
+ynab transactions list --approved=false --min-amount 100 --fields date,amount,payee_name,memo
+```
+
+### Search for specific transactions
+
+```bash
+# Find all approved Amazon purchases with memos
+ynab transactions search --payee-name "Amazon" --approved=true --since 2025-10-01 --fields date,amount,memo
+
+# Find transactions with "groceries" in memo
+ynab transactions search --memo "groceries" --fields date,amount,payee_name,category_name
+```
+
+### Find transactions in a specific date and amount range
+
+```bash
+ynab transactions list --since 2025-10-01 --until 2025-10-31 --min-amount 500 --max-amount 600 --fields date,amount,payee_name,memo
+```
+
+### Find cleared or reconciled transactions
+
+```bash
+ynab transactions list --status=cleared,reconciled --since 2025-10-01 --fields date,amount,payee_name,cleared
+```
+
 ### Update a category budget
 
 ```bash
@@ -175,14 +221,29 @@ ynab transactions split <transaction-id> --splits '[
 
 ## Output Format
 
-All commands return JSON by default:
+All commands return JSON by default. List commands output arrays directly for easy processing:
 
-### Success Response
+### Success Response (Lists)
+
+```json
+[
+  {
+    "id": "abc123",
+    "date": "2025-10-27",
+    "amount": -5000,
+    "payee_name": "Coffee Shop"
+  }
+]
+```
+
+### Success Response (Single Items)
 
 ```json
 {
-  "data": { ... },
-  "server_knowledge": 123  // If applicable
+  "id": "abc123",
+  "date": "2025-10-27",
+  "amount": -5000,
+  "payee_name": "Coffee Shop"
 }
 ```
 

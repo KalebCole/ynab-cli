@@ -3,7 +3,7 @@ import { client } from '../lib/api-client.js';
 import { outputSuccess, outputSuccessWithServerKnowledge } from '../lib/output.js';
 import { YnabCliError } from '../lib/errors.js';
 import { promptForTransaction } from '../lib/prompts.js';
-import { isInteractive, amountToMilliunits } from '../lib/utils.js';
+import { isInteractive, amountToMilliunits, applyTransactionFilters, applyFieldSelection } from '../lib/utils.js';
 import { withErrorHandling, confirmDelete, buildUpdateObject } from '../lib/command-utils.js';
 import type { CommandOptions } from '../types/index.js';
 import fs from 'fs';
@@ -51,25 +51,32 @@ export function createTransactionsCommand(): Command {
     .option('--account <id>', 'Filter by account ID')
     .option('--category <id>', 'Filter by category ID')
     .option('--payee <id>', 'Filter by payee ID')
-    .option('--month <month>', 'Filter by month (YYYY-MM)')
     .option('--since <date>', 'Filter transactions since date (YYYY-MM-DD)')
+    .option('--until <date>', 'Filter transactions until date (YYYY-MM-DD)')
     .option('--type <type>', 'Filter by transaction type')
-    .option('--last-knowledge <number>', 'Last knowledge of server', parseInt)
+    .option('--approved <value>', 'Filter by approval status: true or false')
+    .option('--status <statuses>', 'Filter by cleared status: cleared, uncleared, reconciled (comma-separated for multiple)')
+    .option('--min-amount <amount>', 'Minimum amount in currency units (e.g., 10.50)', parseFloat)
+    .option('--max-amount <amount>', 'Maximum amount in currency units (e.g., 100.00)', parseFloat)
+    .option('--fields <fields>', 'Comma-separated list of fields to include (e.g., id,date,amount,memo)')
     .action(withErrorHandling(async (options: {
       budget?: string;
       account?: string;
       category?: string;
       payee?: string;
-      month?: string;
       since?: string;
+      until?: string;
       type?: string;
-      lastKnowledge?: number;
+      approved?: string;
+      status?: string;
+      minAmount?: number;
+      maxAmount?: number;
+      fields?: string;
     } & CommandOptions) => {
       const params = {
         budgetId: options.budget,
         sinceDate: options.since,
         type: options.type,
-        lastKnowledgeOfServer: options.lastKnowledge,
       };
 
       const result = options.account
@@ -80,11 +87,17 @@ export function createTransactionsCommand(): Command {
         ? await client.getTransactionsByPayee(options.payee, params)
         : await client.getTransactions(params);
 
-      let transactions: any = result?.transactions || [];
+      let transactions = result?.transactions || [];
 
-      if (options.month) {
-        transactions = transactions.filter((t: any) => t.date.startsWith(options.month!));
-      }
+      transactions = applyTransactionFilters(transactions, {
+        until: options.until,
+        approved: options.approved,
+        status: options.status,
+        minAmount: options.minAmount,
+        maxAmount: options.maxAmount,
+      });
+
+      transactions = applyFieldSelection(transactions, options.fields);
 
       outputSuccessWithServerKnowledge(transactions, result?.server_knowledge);
     }));
@@ -246,6 +259,71 @@ export function createTransactionsCommand(): Command {
         options.budget,
       );
       outputSuccess(transaction);
+    }));
+
+  cmd
+    .command('search')
+    .description('Search transactions')
+    .option('-b, --budget <id>', 'Budget ID')
+    .option('--memo <text>', 'Search in memo field')
+    .option('--payee-name <name>', 'Search in payee name')
+    .option('--amount <amount>', 'Search for exact amount in currency units', parseFloat)
+    .option('--since <date>', 'Search transactions since date (YYYY-MM-DD)')
+    .option('--until <date>', 'Search transactions until date (YYYY-MM-DD)')
+    .option('--approved <value>', 'Filter by approval status: true or false')
+    .option('--status <statuses>', 'Filter by cleared status: cleared, uncleared, reconciled (comma-separated)')
+    .option('--fields <fields>', 'Comma-separated list of fields to include')
+    .action(withErrorHandling(async (options: {
+      budget?: string;
+      memo?: string;
+      payeeName?: string;
+      amount?: number;
+      since?: string;
+      until?: string;
+      approved?: string;
+      status?: string;
+      fields?: string;
+    } & CommandOptions) => {
+      if (!options.memo && !options.payeeName && options.amount === undefined) {
+        throw new YnabCliError('At least one search criteria required: --memo, --payee-name, or --amount', 400);
+      }
+
+      const params = {
+        budgetId: options.budget,
+        sinceDate: options.since,
+      };
+
+      const result = await client.getTransactions(params);
+      let transactions = result?.transactions || [];
+
+      if (options.memo) {
+        const searchTerm = options.memo.toLowerCase();
+        transactions = transactions.filter(t =>
+          t.memo?.toLowerCase().includes(searchTerm)
+        );
+      }
+
+      if (options.payeeName) {
+        const searchTerm = options.payeeName.toLowerCase();
+        transactions = transactions.filter(t =>
+          t.payee_name?.toLowerCase().includes(searchTerm)
+        );
+      }
+
+      if (options.amount !== undefined) {
+        const amountMilliunits = amountToMilliunits(options.amount);
+        transactions = transactions.filter(t => t.amount === amountMilliunits);
+      }
+
+      transactions = applyTransactionFilters(transactions, {
+        until: options.until,
+        approved: options.approved,
+        status: options.status,
+      });
+
+      transactions = applyFieldSelection(transactions, options.fields);
+
+      outputSuccessWithServerKnowledge(transactions, result?.server_knowledge);
     }));
 
   return cmd;

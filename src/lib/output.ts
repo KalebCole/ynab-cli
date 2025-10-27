@@ -21,19 +21,13 @@ export function outputJson(data: any, options: OutputOptions = {}): void {
 }
 
 export function outputSuccess(data: any, options: OutputOptions = {}): void {
-  outputJson({ data }, options);
+  outputJson(data, options);
 }
 
 export function outputSuccessWithServerKnowledge(
   data: any,
-  serverKnowledge?: number,
+  _serverKnowledge?: number,
   options: OutputOptions = {},
 ): void {
-  outputJson(
-    {
-      data,
-      ...(serverKnowledge !== undefined && { server_knowledge: serverKnowledge }),
-    },
-    options,
-  );
+  outputJson(data, options);
 }
