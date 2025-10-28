@@ -26,6 +26,45 @@ export function isInteractive(): boolean {
   return process.stdin.isTTY === true;
 }
 
+export function convertMilliunitsToAmounts(data: any): any {
+  if (data === null || data === undefined) {
+    return data;
+  }
+
+  if (Array.isArray(data)) {
+    return data.map(item => convertMilliunitsToAmounts(item));
+  }
+
+  if (typeof data === 'object') {
+    const converted: any = {};
+    for (const [key, value] of Object.entries(data)) {
+      if (isAmountField(key) && typeof value === 'number') {
+        converted[key] = milliunitsToAmount(value);
+      } else {
+        converted[key] = convertMilliunitsToAmounts(value);
+      }
+    }
+    return converted;
+  }
+
+  return data;
+}
+
+function isAmountField(fieldName: string): boolean {
+  const amountFields = [
+    'amount',
+    'balance',
+    'cleared_balance',
+    'uncleared_balance',
+    'budgeted',
+    'activity',
+    'available',
+    'goal_target',
+  ];
+
+  return amountFields.includes(fieldName) || fieldName.endsWith('_amount');
+}
+
 export function parseApprovedFilter(value: string): boolean {
   const normalized = value.toLowerCase();
   if (normalized !== 'true' && normalized !== 'false') {

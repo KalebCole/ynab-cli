@@ -213,9 +213,10 @@ ynab transactions create --account <account-id> --amount -50.00 --payee-name "Co
 ### Split a transaction
 
 ```bash
+# Amounts must be in milliunits (1000 = $1.00)
 ynab transactions split <transaction-id> --splits '[
-  {"amount": -2500, "category_id": "cat-id-1", "memo": "Groceries"},
-  {"amount": -2500, "category_id": "cat-id-2", "memo": "Household items"}
+  {"amount": -25000, "category_id": "cat-id-1", "memo": "Groceries"},
+  {"amount": -25000, "category_id": "cat-id-2", "memo": "Household items"}
 ]'
 ```
 
@@ -230,7 +231,7 @@ All commands return JSON by default. List commands output arrays directly for ea
   {
     "id": "abc123",
     "date": "2025-10-27",
-    "amount": -5000,
+    "amount": -50.00,
     "payee_name": "Coffee Shop"
   }
 ]
@@ -242,7 +243,7 @@ All commands return JSON by default. List commands output arrays directly for ea
 {
   "id": "abc123",
   "date": "2025-10-27",
-  "amount": -5000,
+  "amount": -50.00,
   "payee_name": "Coffee Shop"
 }
 ```
@@ -261,9 +262,11 @@ All commands return JSON by default. List commands output arrays directly for ea
 
 ## Currency Format
 
-YNAB uses milliunits for currency:
-- $10.00 = 10000 milliunits
-- The CLI accepts amounts in currency units (e.g., 10.50) and converts automatically
+**All amounts are in dollars.** The CLI automatically converts YNAB's internal milliunit format (where 1000 = $1.00) to standard dollar amounts in all output.
+
+- **Input:** Amounts in commands use dollars (e.g., `--min-amount 100` means $100)
+- **Output:** All amount fields are displayed in dollars (e.g., `"amount": -555.28` means -$555.28)
+- **Conversion:** Automatic and transparent - you never need to think about milliunits
 
 ## Development
 
@@ -274,6 +277,16 @@ npm run typecheck    # Type check without emitting
 npm run lint         # Lint code
 npm test            # Run tests
 ```
+
+## API Limitations
+
+**Note**: The YNAB API is mostly read-only. The following operations are **not supported** by the YNAB API and cannot be performed via this CLI:
+
+- Creating new categories or category groups
+- Creating new payees
+- Creating or updating accounts (beyond initial creation)
+
+These operations must be performed through the YNAB web or mobile application.
 
 ## API Rate Limits
 

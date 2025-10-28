@@ -1,5 +1,6 @@
 import fs from 'fs';
 import type { OutputOptions } from '../types/index.js';
+import { convertMilliunitsToAmounts } from './utils.js';
 
 let globalOutputOptions: OutputOptions = {};
 
@@ -8,10 +9,12 @@ export function setOutputOptions(options: OutputOptions): void {
 }
 
 export function outputJson(data: any, options: OutputOptions = {}): void {
+  const convertedData = convertMilliunitsToAmounts(data);
+
   const mergedOptions = { ...globalOutputOptions, ...options };
   const jsonString = mergedOptions.compact
-    ? JSON.stringify(data)
-    : JSON.stringify(data, null, 2);
+    ? JSON.stringify(convertedData)
+    : JSON.stringify(convertedData, null, 2);
 
   if (mergedOptions.output) {
     fs.writeFileSync(mergedOptions.output, jsonString);
