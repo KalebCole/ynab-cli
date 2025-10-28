@@ -58,8 +58,6 @@ YNAB_BUDGET_ID=your_default_budget_id  # Optional
 
 ```bash
 --compact, -c          # Minified JSON output (single line)
---output, -o <file>    # Write output to file instead of stdout
---budget, -b <id>      # Specify budget ID (uses default/env if not specified)
 ```
 
 ### Commands
