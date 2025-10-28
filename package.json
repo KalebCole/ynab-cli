@@ -1,5 +1,5 @@
 {
-  "name": "ynab-cli",
+  "name": "@stephendolan/ynab-cli",
   "version": "1.0.0",
   "description": "A command-line interface for You Need a Budget (YNAB)",
   "type": "module",
@@ -14,37 +14,55 @@
     "lint": "eslint src --ext .ts",
     "typecheck": "tsc --noEmit",
     "link": "npm run build && npm link",
-    "start": "node dist/cli.js"
+    "start": "node dist/cli.js",
+    "audit": "npm audit --audit-level=moderate"
   },
   "keywords": [
     "ynab",
     "budget",
     "cli",
-    "finance"
+    "finance",
+    "command-line",
+    "budgeting",
+    "llm",
+    "ai-friendly"
   ],
-  "author": "",
+  "author": "Stephen Dolan <https://github.com/stephendolan>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stephendolan/ynab-cli.git"
+  },
+  "bugs": {
+    "url": "https://github.com/stephendolan/ynab-cli/issues"
+  },
+  "homepage": "https://github.com/stephendolan/ynab-cli#readme",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "dependencies": {
-    "ynab": "^2.10.0",
-    "commander": "^12.0.0",
     "chalk": "^5.3.0",
-    "inquirer": "^9.2.0",
+    "commander": "^12.0.0",
     "conf": "^12.0.0",
-    "keytar": "^7.9.0",
     "date-fns": "^3.0.0",
-    "zod": "^3.22.0",
-    "dotenv": "^16.4.0"
+    "dotenv": "^16.4.0",
+    "inquirer": "^9.2.0",
+    "keytar": "^7.9.0",
+    "ynab": "^2.10.0",
+    "zod": "^3.22.0"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
     "@types/inquirer": "^9.0.0",
-    "typescript": "^5.3.0",
-    "tsx": "^4.7.0",
-    "tsup": "^8.0.0",
-    "vitest": "^1.2.0",
+    "@types/node": "^20.0.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
-    "eslint": "^8.56.0"
+    "eslint": "^8.56.0",
+    "tsup": "^8.0.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.0",
+    "vitest": "^4.0.4"
   },
   "engines": {
     "node": ">=18.0.0"

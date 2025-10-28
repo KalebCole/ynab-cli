@@ -1,4 +1,3 @@
-import fs from 'fs';
 import type { OutputOptions } from '../types/index.js';
 import { convertMilliunitsToAmounts } from './utils.js';
 
@@ -16,21 +15,9 @@ export function outputJson(data: any, options: OutputOptions = {}): void {
     ? JSON.stringify(convertedData)
     : JSON.stringify(convertedData, null, 2);
 
-  if (mergedOptions.output) {
-    fs.writeFileSync(mergedOptions.output, jsonString);
-  } else {
-    console.log(jsonString);
-  }
+  console.log(jsonString);
 }
 
 export function outputSuccess(data: any, options: OutputOptions = {}): void {
-  outputJson(data, options);
-}
-
-export function outputSuccessWithServerKnowledge(
-  data: any,
-  _serverKnowledge?: number,
-  options: OutputOptions = {},
-): void {
   outputJson(data, options);
 }

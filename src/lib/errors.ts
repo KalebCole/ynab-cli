@@ -26,6 +26,34 @@ const ERROR_STATUS_CODES: Record<string, number> = {
   service_unavailable: 503,
 };
 
+export function sanitizeErrorMessage(message: string): string {
+  const sensitivePatterns = [
+    /Bearer\s+[\w\-._~+/]+=*/gi,
+    /token[=:]\s*[\w\-._~+/]+=*/gi,
+    /api[_-]?key[=:]\s*[\w\-._~+/]+=*/gi,
+    /authorization:\s*bearer\s+[\w\-._~+/]+=*/gi,
+  ];
+
+  let sanitized = message;
+  for (const pattern of sensitivePatterns) {
+    sanitized = sanitized.replace(pattern, '[REDACTED]');
+  }
+
+  return sanitized.length > 500 ? sanitized.substring(0, 500) + '...' : sanitized;
+}
+
+export function sanitizeApiError(error: any): YnabError {
+  const detail = sanitizeErrorMessage(
+    String(error.detail || error.message || 'An error occurred')
+  );
+
+  return {
+    name: error.name || 'api_error',
+    detail,
+    id: error.id,
+  };
+}
+
 function formatErrorResponse(name: string, detail: string, statusCode: number): never {
   outputJson({ error: { name, detail, statusCode } });
   process.exit(1);
@@ -33,7 +61,7 @@ function formatErrorResponse(name: string, detail: string, statusCode: number): 
 
 export function handleYnabError(error: any): never {
   if (error.error) {
-    const ynabError: YnabError = error.error;
+    const ynabError: YnabError = sanitizeApiError(error.error);
     formatErrorResponse(
       ynabError.name,
       ynabError.detail,
@@ -42,8 +70,10 @@ export function handleYnabError(error: any): never {
   }
 
   if (error instanceof YnabCliError) {
-    formatErrorResponse('cli_error', error.message, error.statusCode || 1);
+    const sanitized = sanitizeErrorMessage(error.message);
+    formatErrorResponse('cli_error', sanitized, error.statusCode || 1);
   }
 
-  formatErrorResponse('unknown_error', error.message || 'An unexpected error occurred', 1);
+  const sanitized = sanitizeErrorMessage(error.message || 'An unexpected error occurred');
+  formatErrorResponse('unknown_error', sanitized, 1);
 }

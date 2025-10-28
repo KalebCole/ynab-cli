@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { client } from '../lib/api-client.js';
-import { outputSuccess, outputSuccessWithServerKnowledge } from '../lib/output.js';
+import { outputSuccess } from '../lib/output.js';
 import { YnabCliError } from '../lib/errors.js';
 import { amountToMilliunits } from '../lib/utils.js';
 import { withErrorHandling } from '../lib/command-utils.js';
@@ -16,7 +16,7 @@ export function createCategoriesCommand(): Command {
     .option('--last-knowledge <number>', 'Last knowledge of server', parseInt)
     .action(withErrorHandling(async (options: { budget?: string; lastKnowledge?: number } & CommandOptions) => {
       const result = await client.getCategories(options.budget, options.lastKnowledge);
-      outputSuccessWithServerKnowledge(result?.category_groups, result?.server_knowledge);
+      outputSuccess(result?.category_groups);
     }));
 
   cmd
@@ -81,7 +81,7 @@ export function createCategoriesCommand(): Command {
         type: options.type,
         lastKnowledgeOfServer: options.lastKnowledge,
       });
-      outputSuccessWithServerKnowledge(result?.transactions, result?.server_knowledge);
+      outputSuccess(result?.transactions);
     }));
 
   return cmd;

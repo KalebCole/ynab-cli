@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { client } from '../lib/api-client.js';
-import { outputSuccess, outputSuccessWithServerKnowledge } from '../lib/output.js';
+import { outputSuccess } from '../lib/output.js';
 import { withErrorHandling } from '../lib/command-utils.js';
 import type { CommandOptions } from '../types/index.js';
 
@@ -13,7 +13,7 @@ export function createAccountsCommand(): Command {
     .option('-b, --budget <id>', 'Budget ID')
     .action(withErrorHandling(async (options: CommandOptions) => {
       const result = await client.getAccounts(options.budget);
-      outputSuccessWithServerKnowledge(result?.accounts, result?.server_knowledge);
+      outputSuccess(result?.accounts);
     }));
 
   cmd
@@ -46,7 +46,7 @@ export function createAccountsCommand(): Command {
         sinceDate: options.since,
         type: options.type,
       });
-      outputSuccessWithServerKnowledge(result?.transactions, result?.server_knowledge);
+      outputSuccess(result?.transactions);
     }));
 
   return cmd;

@@ -1,5 +1,10 @@
 # YNAB CLI
 
+[![npm version](https://img.shields.io/npm/v/@stephendolan/ynab-cli.svg)](https://www.npmjs.com/package/@stephendolan/ynab-cli)
+[![npm downloads](https://img.shields.io/npm/dm/@stephendolan/ynab-cli.svg)](https://www.npmjs.com/package/@stephendolan/ynab-cli)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js Version](https://img.shields.io/node/v/@stephendolan/ynab-cli.svg)](https://nodejs.org)
+
 A command-line interface for You Need a Budget (YNAB) designed to enable LLMs (Claude, ChatGPT, etc.) and developers to quickly interface with YNAB budgets, make changes, and audit financial data.
 
 ## Features
@@ -14,9 +19,21 @@ A command-line interface for You Need a Budget (YNAB) designed to enable LLMs (C
 ## Installation
 
 ```bash
+# Install globally
+npm install -g @stephendolan/ynab-cli
+
+# Or run directly without installing
+npx @stephendolan/ynab-cli budgets list
+```
+
+### Development Setup
+
+```bash
+git clone https://github.com/stephendolan/ynab-cli.git
+cd ynab-cli
 npm install
 npm run build
-npm link  # Optional: makes `ynab` available globally
+npm link  # Makes `ynab` available globally for testing
 ```
 
 ## Authentication

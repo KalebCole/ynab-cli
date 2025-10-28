@@ -15,7 +15,6 @@ export interface ApiErrorResponse {
 
 export interface OutputOptions {
   compact?: boolean;
-  output?: string;
 }
 
 export interface CommandOptions extends OutputOptions {

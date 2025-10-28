@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { client } from '../lib/api-client.js';
-import { outputSuccess, outputSuccessWithServerKnowledge } from '../lib/output.js';
+import { outputSuccess } from '../lib/output.js';
 import { YnabCliError } from '../lib/errors.js';
 import { withErrorHandling } from '../lib/command-utils.js';
 import type { CommandOptions } from '../types/index.js';
@@ -15,7 +15,7 @@ export function createPayeesCommand(): Command {
     .option('--last-knowledge <number>', 'Last knowledge of server', parseInt)
     .action(withErrorHandling(async (options: { budget?: string; lastKnowledge?: number } & CommandOptions) => {
       const result = await client.getPayees(options.budget, options.lastKnowledge);
-      outputSuccessWithServerKnowledge(result?.payees, result?.server_knowledge);
+      outputSuccess(result?.payees);
     }));
 
   cmd
@@ -80,7 +80,7 @@ export function createPayeesCommand(): Command {
         type: options.type,
         lastKnowledgeOfServer: options.lastKnowledge,
       });
-      outputSuccessWithServerKnowledge(result?.transactions, result?.server_knowledge);
+      outputSuccess(result?.transactions);
     }));
 
   return cmd;

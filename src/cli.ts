@@ -20,12 +20,10 @@ program
   .description('A command-line interface for You Need a Budget (YNAB)')
   .version('1.0.0')
   .option('-c, --compact', 'Minified JSON output (single line)')
-  .option('-o, --output <file>', 'Write output to file instead of stdout')
   .hook('preAction', (thisCommand) => {
     const options = thisCommand.opts();
     setOutputOptions({
       compact: options.compact,
-      output: options.output,
     });
   });
 

@@ -1,6 +1,6 @@
 import * as ynab from 'ynab';
 import { config } from './config.js';
-import { YnabCliError, handleYnabError } from './errors.js';
+import { YnabCliError, handleYnabError, sanitizeApiError } from './errors.js';
 import { auth } from './auth.js';
 import dotenv from 'dotenv';
 
@@ -8,20 +8,30 @@ dotenv.config();
 
 export class YnabClient {
   private api: ynab.API | null = null;
+  private hasShownEnvVarWarning = false;
 
   async getApi(): Promise<ynab.API> {
     if (this.api) {
       return this.api;
     }
 
-    const accessToken =
-      (await auth.getAccessToken()) || process.env.YNAB_API_KEY || null;
+    const keychainToken = await auth.getAccessToken();
+    const accessToken = keychainToken || process.env.YNAB_API_KEY || null;
 
     if (!accessToken) {
       throw new YnabCliError(
         'Not authenticated. Please run: ynab auth login or set YNAB_API_KEY environment variable',
         401,
       );
+    }
+
+    if (!keychainToken && process.env.YNAB_API_KEY && !this.hasShownEnvVarWarning) {
+      console.warn(
+        '\x1b[33m⚠️  WARNING: Using YNAB_API_KEY environment variable.\n' +
+        'Environment variables may be visible to other processes.\n' +
+        'For better security, use: ynab auth login\x1b[0m\n'
+      );
+      this.hasShownEnvVarWarning = true;
     }
 
     this.api = new ynab.API(accessToken);
@@ -522,7 +532,8 @@ export class YnabClient {
       });
 
       if (!response.ok) {
-        throw await response.json();
+        const errorData: any = await response.json();
+        throw { error: sanitizeApiError(errorData.error || errorData) };
       }
 
       return await response.json();

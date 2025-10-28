@@ -1,12 +1,12 @@
 import { Command } from 'commander';
 import { client } from '../lib/api-client.js';
-import { outputSuccess, outputSuccessWithServerKnowledge } from '../lib/output.js';
+import { outputSuccess } from '../lib/output.js';
 import { YnabCliError } from '../lib/errors.js';
 import { promptForTransaction } from '../lib/prompts.js';
 import { isInteractive, amountToMilliunits, applyTransactionFilters, applyFieldSelection } from '../lib/utils.js';
 import { withErrorHandling, confirmDelete, buildUpdateObject } from '../lib/command-utils.js';
+import { validateJson, TransactionSplitSchema } from '../lib/schemas.js';
 import type { CommandOptions } from '../types/index.js';
-import fs from 'fs';
 
 interface TransactionOptions {
   account?: string;
@@ -99,7 +99,7 @@ export function createTransactionsCommand(): Command {
 
       transactions = applyFieldSelection(transactions, options.fields);
 
-      outputSuccessWithServerKnowledge(transactions, result?.server_knowledge);
+      outputSuccess(transactions);
     }));
 
   cmd
@@ -125,7 +125,6 @@ export function createTransactionsCommand(): Command {
     .option('--memo <memo>', 'Memo')
     .option('--cleared <status>', 'Cleared status (cleared, uncleared, reconciled)')
     .option('--approved', 'Mark as approved')
-    .option('--batch <file>', 'Create multiple transactions from JSON file')
     .action(withErrorHandling(async (options: {
       budget?: string;
       account?: string;
@@ -137,19 +136,7 @@ export function createTransactionsCommand(): Command {
       memo?: string;
       cleared?: string;
       approved?: boolean;
-      batch?: string;
     } & CommandOptions) => {
-      if (options.batch) {
-        const fileContent = fs.readFileSync(options.batch, 'utf-8');
-        const transactionsData = JSON.parse(fileContent);
-        const result = await client.createTransactions(
-          { transactions: transactionsData },
-          options.budget,
-        );
-        outputSuccess(result);
-        return;
-      }
-
       const shouldPrompt = isInteractive() && !options.account && !options.amount;
       const transactionData = shouldPrompt
         ? await promptForTransaction()
@@ -237,16 +224,14 @@ export function createTransactionsCommand(): Command {
       id: string,
       options: { splits: string; budget?: string } & CommandOptions,
     ) => {
-      let splits;
+      let parsedSplits;
       try {
-        splits = JSON.parse(options.splits);
+        parsedSplits = JSON.parse(options.splits);
       } catch (error) {
         throw new YnabCliError('Invalid JSON in --splits parameter', 400);
       }
 
-      if (!Array.isArray(splits)) {
-        throw new YnabCliError('--splits must be a JSON array', 400);
-      }
+      const splits = validateJson(parsedSplits, TransactionSplitSchema, 'transaction splits');
 
       const transaction = await client.updateTransaction(
         id,
@@ -323,7 +308,7 @@ export function createTransactionsCommand(): Command {
 
       transactions = applyFieldSelection(transactions, options.fields);
 
-      outputSuccessWithServerKnowledge(transactions, result?.server_knowledge);
+      outputSuccess(transactions);
     }));
 
   return cmd;

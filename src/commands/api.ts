@@ -3,6 +3,7 @@ import { client } from '../lib/api-client.js';
 import { outputJson } from '../lib/output.js';
 import { YnabCliError } from '../lib/errors.js';
 import { withErrorHandling } from '../lib/command-utils.js';
+import { validateJson, ApiDataSchema } from '../lib/schemas.js';
 import type { CommandOptions } from '../types/index.js';
 
 const VALID_HTTP_METHODS = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
@@ -32,11 +33,13 @@ export function createApiCommand(): Command {
 
       let data: any;
       if (options.data) {
+        let parsedData;
         try {
-          data = JSON.parse(options.data);
+          parsedData = JSON.parse(options.data);
         } catch (error) {
           throw new YnabCliError('Invalid JSON in --data parameter', 400);
         }
+        data = validateJson(parsedData, ApiDataSchema, 'API data');
       }
 
       const result = await client.rawApiCall(upperMethod, path, data, options.budget);

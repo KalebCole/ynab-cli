@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import { client } from '../lib/api-client.js';
 import { config } from '../lib/config.js';
-import { outputSuccess, outputSuccessWithServerKnowledge } from '../lib/output.js';
+import { outputSuccess } from '../lib/output.js';
 import { YnabCliError } from '../lib/errors.js';
 import { withErrorHandling } from '../lib/command-utils.js';
 
@@ -14,7 +14,7 @@ export function createBudgetsCommand(): Command {
     .option('--include-accounts', 'Include accounts in response')
     .action(withErrorHandling(async (options: { includeAccounts?: boolean }) => {
       const result = await client.getBudgets(options.includeAccounts);
-      outputSuccessWithServerKnowledge(result?.budgets, result?.server_knowledge);
+      outputSuccess(result?.budgets);
     }));
 
   cmd
@@ -23,7 +23,7 @@ export function createBudgetsCommand(): Command {
     .argument('[id]', 'Budget ID')
     .action(withErrorHandling(async (id: string | undefined) => {
       const result = await client.getBudget(id);
-      outputSuccessWithServerKnowledge(result?.budget, result?.server_knowledge);
+      outputSuccess(result?.budget);
     }));
 
   cmd
