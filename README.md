@@ -26,6 +26,23 @@ npm install -g @stephendolan/ynab-cli
 npx @stephendolan/ynab-cli budgets list
 ```
 
+### Linux Prerequisites
+
+Requires `libsecret` for keychain storage:
+
+```bash
+# Ubuntu/Debian
+sudo apt-get install libsecret-1-dev
+
+# Fedora/RHEL
+sudo dnf install libsecret-devel
+
+# Arch Linux
+sudo pacman -S libsecret
+```
+
+Without `libsecret`, use the `YNAB_API_KEY` environment variable instead.
+
 ### From Source
 
 ```bash
