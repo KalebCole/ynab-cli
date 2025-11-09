@@ -42,15 +42,35 @@ export function sanitizeErrorMessage(message: string): string {
   return sanitized.length > 500 ? sanitized.substring(0, 500) + '...' : sanitized;
 }
 
-export function sanitizeApiError(error: any): YnabError {
+interface YnabApiError {
+  name?: string;
+  detail?: string;
+  message?: string;
+  id?: string;
+}
+
+function isErrorObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+export function sanitizeApiError(error: unknown): YnabError {
+  if (!isErrorObject(error)) {
+    return {
+      name: 'api_error',
+      detail: 'An error occurred',
+      id: undefined,
+    };
+  }
+
+  const apiError = error as YnabApiError;
   const detail = sanitizeErrorMessage(
-    String(error.detail || error.message || 'An error occurred')
+    String(apiError.detail || apiError.message || 'An error occurred')
   );
 
   return {
-    name: error.name || 'api_error',
+    name: apiError.name || 'api_error',
     detail,
-    id: error.id,
+    id: apiError.id,
   };
 }
 
@@ -59,9 +79,15 @@ function formatErrorResponse(name: string, detail: string, statusCode: number): 
   process.exit(1);
 }
 
-export function handleYnabError(error: any): never {
-  if (error.error) {
-    const ynabError: YnabError = sanitizeApiError(error.error);
+export function handleYnabError(error: unknown): never {
+  if (!isErrorObject(error)) {
+    formatErrorResponse('unknown_error', 'An unexpected error occurred', 1);
+  }
+
+  const errorObj = error as { error?: unknown; message?: string };
+
+  if (errorObj.error) {
+    const ynabError: YnabError = sanitizeApiError(errorObj.error);
     formatErrorResponse(
       ynabError.name,
       ynabError.detail,
@@ -74,6 +100,6 @@ export function handleYnabError(error: any): never {
     formatErrorResponse('cli_error', sanitized, error.statusCode || 1);
   }
 
-  const sanitized = sanitizeErrorMessage(error.message || 'An unexpected error occurred');
+  const sanitized = sanitizeErrorMessage(errorObj.message || 'An unexpected error occurred');
   formatErrorResponse('unknown_error', sanitized, 1);
 }

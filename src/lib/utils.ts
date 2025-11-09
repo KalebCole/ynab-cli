@@ -26,7 +26,7 @@ export function isInteractive(): boolean {
   return process.stdin.isTTY === true;
 }
 
-export function convertMilliunitsToAmounts(data: any): any {
+export function convertMilliunitsToAmounts(data: unknown): unknown {
   if (data === null || data === undefined) {
     return data;
   }
@@ -36,7 +36,7 @@ export function convertMilliunitsToAmounts(data: any): any {
   }
 
   if (typeof data === 'object') {
-    const converted: any = {};
+    const converted: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(data)) {
       if (isAmountField(key) && typeof value === 'number') {
         converted[key] = milliunitsToAmount(value);
@@ -86,13 +86,20 @@ export function parseStatusFilter(value: string): string[] {
   return statuses;
 }
 
-export function applyTransactionFilters(transactions: any[], filters: {
+export type TransactionLike = {
+  date: string;
+  amount: number;
+  approved: boolean;
+  cleared: string;
+};
+
+export function applyTransactionFilters<T extends TransactionLike>(transactions: T[], filters: {
   until?: string;
   approved?: string;
   status?: string;
   minAmount?: number;
   maxAmount?: number;
-}): any[] {
+}): T[] {
   let filtered = transactions;
 
   if (filters.until) {
@@ -122,15 +129,16 @@ export function applyTransactionFilters(transactions: any[], filters: {
   return filtered;
 }
 
-export function applyFieldSelection(items: any[], fields?: string): any[] {
+export function applyFieldSelection<T>(items: T[], fields?: string): Partial<T>[] {
   if (!fields) return items;
 
   const fieldList = fields.split(',').map(f => f.trim());
   return items.map(item => {
-    const filtered: any = {};
+    const filtered: Partial<T> = {};
+    const itemRecord = item as Record<string, unknown>;
     fieldList.forEach(field => {
-      if (field in item) {
-        filtered[field] = item[field];
+      if (field in itemRecord) {
+        (filtered as Record<string, unknown>)[field] = itemRecord[field];
       }
     });
     return filtered;

@@ -10,7 +10,7 @@ class ConfigManager {
       schema: {
         defaultBudget: { type: 'string' },
         version: { type: 'string', default: '1.0.0' },
-      } as any,
+      },
       defaults: { version: '1.0.0' },
     });
   }

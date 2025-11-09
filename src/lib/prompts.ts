@@ -39,7 +39,7 @@ export async function promptForConfirmation(message: string): Promise<boolean> {
   return confirmed;
 }
 
-export async function promptForTransaction(): Promise<any> {
+export async function promptForTransaction(): Promise<Record<string, unknown>> {
   const answers = await inquirer.prompt([
     {
       type: 'input',

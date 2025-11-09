@@ -3,7 +3,7 @@ import { client } from '../lib/api-client.js';
 import { outputSuccess } from '../lib/output.js';
 import { YnabCliError } from '../lib/errors.js';
 import { promptForTransaction } from '../lib/prompts.js';
-import { isInteractive, amountToMilliunits, applyTransactionFilters, applyFieldSelection } from '../lib/utils.js';
+import { isInteractive, amountToMilliunits, applyTransactionFilters, applyFieldSelection, type TransactionLike } from '../lib/utils.js';
 import { withErrorHandling, confirmDelete, buildUpdateObject } from '../lib/command-utils.js';
 import { validateJson, TransactionSplitSchema } from '../lib/schemas.js';
 import type { CommandOptions } from '../types/index.js';
@@ -20,7 +20,7 @@ interface TransactionOptions {
   approved?: boolean;
 }
 
-function buildTransactionData(options: TransactionOptions): any {
+function buildTransactionData(options: TransactionOptions): Record<string, unknown> {
   if (!options.account) {
     throw new YnabCliError('--account is required in non-interactive mode', 400);
   }
@@ -87,9 +87,9 @@ export function createTransactionsCommand(): Command {
         ? await client.getTransactionsByPayee(options.payee, params)
         : await client.getTransactions(params);
 
-      let transactions = result?.transactions || [];
+      const transactions = result?.transactions || [];
 
-      transactions = applyTransactionFilters(transactions, {
+      const filtered = applyTransactionFilters(transactions as TransactionLike[], {
         until: options.until,
         approved: options.approved,
         status: options.status,
@@ -97,9 +97,9 @@ export function createTransactionsCommand(): Command {
         maxAmount: options.maxAmount,
       });
 
-      transactions = applyFieldSelection(transactions, options.fields);
+      const selected = applyFieldSelection(filtered, options.fields);
 
-      outputSuccess(transactions);
+      outputSuccess(selected);
     }));
 
   cmd
@@ -306,9 +306,9 @@ export function createTransactionsCommand(): Command {
         status: options.status,
       });
 
-      transactions = applyFieldSelection(transactions, options.fields);
+      const filteredTransactions = applyFieldSelection(transactions, options.fields);
 
-      outputSuccess(transactions);
+      outputSuccess(filteredTransactions);
     }));
 
   return cmd;

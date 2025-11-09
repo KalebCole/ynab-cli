@@ -3,10 +3,10 @@ import { promptForConfirmation } from './prompts.js';
 import { isInteractive } from './utils.js';
 import { outputSuccess } from './output.js';
 
-export function withErrorHandling<T extends any[], R>(
-  fn: (...args: T) => Promise<R>,
-): (...args: T) => Promise<void> {
-  return async (...args: T) => {
+export function withErrorHandling<TArgs extends unknown[], R>(
+  fn: (...args: TArgs) => Promise<R>,
+): (...args: TArgs) => Promise<void> {
+  return async (...args: TArgs) => {
     try {
       await fn(...args);
     } catch (error) {
@@ -35,15 +35,16 @@ export async function confirmDelete(
   return true;
 }
 
-export function buildUpdateObject<T extends Record<string, any>>(
-  options: Record<string, any>,
+export function buildUpdateObject<T>(
+  options: T,
   mapping: Record<string, string>,
-): T {
-  const result: any = {};
+): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  const optionsRecord = options as Record<string, unknown>;
 
   for (const [optionKey, targetKey] of Object.entries(mapping)) {
-    if (options[optionKey] !== undefined) {
-      result[targetKey] = options[optionKey];
+    if (optionsRecord[optionKey] !== undefined) {
+      result[targetKey] = optionsRecord[optionKey];
     }
   }
 

@@ -6,6 +6,8 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+type TransactionTypeFilter = 'uncategorized' | 'unapproved' | undefined;
+
 export class YnabClient {
   private api: ynab.API | null = null;
   private hasShownEnvVarWarning = false;
@@ -277,7 +279,7 @@ export class YnabClient {
       const response = await api.transactions.getTransactions(
         id,
         params.sinceDate,
-        params.type as any,
+        params.type as TransactionTypeFilter,
         params.lastKnowledgeOfServer,
       );
       return {
@@ -300,7 +302,7 @@ export class YnabClient {
         id,
         accountId,
         params.sinceDate,
-        params.type as any,
+        params.type as TransactionTypeFilter,
         params.lastKnowledgeOfServer,
       );
       return {
@@ -323,7 +325,7 @@ export class YnabClient {
         id,
         categoryId,
         params.sinceDate,
-        params.type as any,
+        params.type as TransactionTypeFilter,
         params.lastKnowledgeOfServer,
       );
       return {
@@ -346,7 +348,7 @@ export class YnabClient {
         id,
         payeeId,
         params.sinceDate,
-        params.type as any,
+        params.type as TransactionTypeFilter,
         params.lastKnowledgeOfServer,
       );
       return {
@@ -504,7 +506,7 @@ export class YnabClient {
     });
   }
 
-  async rawApiCall(method: string, path: string, data?: any, budgetId?: string) {
+  async rawApiCall(method: string, path: string, data?: unknown, budgetId?: string) {
     return this.withErrorHandling(async () => {
       await this.getApi();
 
@@ -532,7 +534,7 @@ export class YnabClient {
       });
 
       if (!response.ok) {
-        const errorData: any = await response.json();
+        const errorData = await response.json() as Record<string, unknown>;
         throw { error: sanitizeApiError(errorData.error || errorData) };
       }
 

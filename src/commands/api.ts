@@ -31,15 +31,14 @@ export function createApiCommand(): Command {
         );
       }
 
-      let data: any;
+      let data: Record<string, unknown> | undefined;
       if (options.data) {
-        let parsedData;
         try {
-          parsedData = JSON.parse(options.data);
+          const parsedData = JSON.parse(options.data);
+          data = validateJson(parsedData, ApiDataSchema, 'API data');
         } catch (error) {
           throw new YnabCliError('Invalid JSON in --data parameter', 400);
         }
-        data = validateJson(parsedData, ApiDataSchema, 'API data');
       }
 
       const result = await client.rawApiCall(upperMethod, path, data, options.budget);

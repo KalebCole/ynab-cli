@@ -57,7 +57,7 @@ describe('TransactionSplitSchema', () => {
   });
 
   it('should handle empty arrays', () => {
-    const emptySplits: any[] = [];
+    const emptySplits: unknown[] = [];
     const result = validateJson(emptySplits, TransactionSplitSchema, 'splits');
     expect(result).toEqual([]);
   });

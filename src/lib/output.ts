@@ -7,7 +7,7 @@ export function setOutputOptions(options: OutputOptions): void {
   globalOutputOptions = options;
 }
 
-export function outputJson(data: any, options: OutputOptions = {}): void {
+export function outputJson(data: unknown, options: OutputOptions = {}): void {
   const convertedData = convertMilliunitsToAmounts(data);
 
   const mergedOptions = { ...globalOutputOptions, ...options };
@@ -18,6 +18,6 @@ export function outputJson(data: any, options: OutputOptions = {}): void {
   console.log(jsonString);
 }
 
-export function outputSuccess(data: any, options: OutputOptions = {}): void {
+export function outputSuccess(data: unknown, options: OutputOptions = {}): void {
   outputJson(data, options);
 }
