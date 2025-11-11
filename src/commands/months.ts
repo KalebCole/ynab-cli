@@ -20,7 +20,7 @@ export function createMonthsCommand(): Command {
   cmd
     .command('view')
     .description('View specific month details')
-    .argument('<month>', 'Month in YYYY-MM format')
+    .argument('<month>', 'Month in YYYY-MM-DD format (e.g., 2025-07-01)')
     .option('-b, --budget <id>', 'Budget ID')
     .action(withErrorHandling(async (month: string, options: CommandOptions) => {
       const monthData = await client.getBudgetMonth(month, options.budget);

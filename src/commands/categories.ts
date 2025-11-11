@@ -31,10 +31,10 @@ export function createCategoriesCommand(): Command {
 
   cmd
     .command('budget')
-    .description('Update category budget for a month')
+    .description('Set category budgeted amount for a month (overrides existing amount)')
     .argument('<id>', 'Category ID')
-    .requiredOption('--month <month>', 'Month in YYYY-MM format')
-    .requiredOption('--amount <amount>', 'Budget amount in currency units (e.g., 100.50)', parseFloat)
+    .requiredOption('--month <month>', 'Month in YYYY-MM-DD format (e.g., 2025-07-01)')
+    .requiredOption('--amount <amount>', 'Total budgeted amount to set (e.g., 100.50)', parseFloat)
     .option('-b, --budget <id>', 'Budget ID')
     .action(withErrorHandling(async (
       id: string,

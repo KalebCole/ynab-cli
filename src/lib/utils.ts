@@ -40,6 +40,12 @@ export function convertMilliunitsToAmounts(data: unknown): unknown {
     for (const [key, value] of Object.entries(data)) {
       if (isAmountField(key) && typeof value === 'number') {
         converted[key] = milliunitsToAmount(value);
+      } else if (isDebtAmountMapField(key) && typeof value === 'object' && value !== null && !Array.isArray(value)) {
+        const convertedMap: Record<string, unknown> = {};
+        for (const [dateKey, amountValue] of Object.entries(value)) {
+          convertedMap[dateKey] = typeof amountValue === 'number' ? milliunitsToAmount(amountValue) : amountValue;
+        }
+        converted[key] = convertedMap;
       } else {
         converted[key] = convertMilliunitsToAmounts(value);
       }
@@ -60,9 +66,25 @@ function isAmountField(fieldName: string): boolean {
     'activity',
     'available',
     'goal_target',
+    'goal_under_funded',
+    'goal_overall_funded',
+    'goal_overall_left',
+    'income',
+    'to_be_budgeted',
+    'debt_original_balance',
   ];
 
   return amountFields.includes(fieldName) || fieldName.endsWith('_amount');
+}
+
+function isDebtAmountMapField(fieldName: string): boolean {
+  const debtAmountMapFields = [
+    'debt_minimum_payments',
+    'debt_escrow_amounts',
+    'debt_interest_rates',
+  ];
+
+  return debtAmountMapFields.includes(fieldName);
 }
 
 export function parseApprovedFilter(value: string): boolean {
