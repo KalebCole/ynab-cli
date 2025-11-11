@@ -1,6 +1,6 @@
 {
   "name": "@stephendolan/ynab-cli",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "A command-line interface for You Need a Budget (YNAB)",
   "type": "module",
   "main": "./dist/cli.js",
