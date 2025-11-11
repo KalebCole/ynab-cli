@@ -250,7 +250,7 @@ export function createTransactionsCommand(): Command {
         );
       }
 
-      if (isAlreadySplit && options.force) {
+      if (isAlreadySplit) {
         await client.deleteTransaction(id, options.budget);
 
         const recreatedTransaction = await client.createTransaction(
