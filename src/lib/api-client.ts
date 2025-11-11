@@ -368,7 +368,7 @@ export class YnabClient {
   }
 
   async createTransaction(
-    transactionData: ynab.PutTransactionWrapper,
+    transactionData: ynab.PostTransactionsWrapper,
     budgetId?: string,
   ) {
     return this.withErrorHandling(async () => {

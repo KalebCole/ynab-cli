@@ -216,13 +216,14 @@ export function createTransactionsCommand(): Command {
 
   cmd
     .command('split')
-    .description('Split transaction into multiple categories')
+    .description('Split transaction into multiple categories. Amounts should be in dollars (e.g., 10.50).')
     .argument('<id>', 'Transaction ID')
-    .requiredOption('--splits <json>', 'JSON array of splits: [{"amount": -21400, "category_id": "xxx", "memo": "..."}]')
+    .requiredOption('--splits <json>', 'JSON array of splits with dollar amounts: [{"amount": -21.40, "category_id": "xxx", "memo": "..."}]')
     .option('-b, --budget <id>', 'Budget ID')
+    .option('-f, --force', 'Force update of already-split transactions by deleting and recreating')
     .action(withErrorHandling(async (
       id: string,
-      options: { splits: string; budget?: string } & CommandOptions,
+      options: { splits: string; budget?: string; force?: boolean } & CommandOptions,
     ) => {
       let parsedSplits;
       try {
@@ -233,17 +234,58 @@ export function createTransactionsCommand(): Command {
 
       const splits = validateJson(parsedSplits, TransactionSplitSchema, 'transaction splits');
 
-      const transaction = await client.updateTransaction(
-        id,
-        {
-          transaction: {
-            category_id: null,
-            subtransactions: splits,
+      const splitsInMilliunits = splits.map(split => ({
+        ...split,
+        amount: amountToMilliunits(split.amount),
+      }));
+
+      const existingTransaction = await client.getTransaction(id, options.budget);
+      const isAlreadySplit = existingTransaction.subtransactions && existingTransaction.subtransactions.length > 0;
+
+      if (isAlreadySplit && !options.force) {
+        throw new YnabCliError(
+          'Transaction is already split. YNAB API does not support updating split transactions. ' +
+          'Use --force to delete and recreate the transaction with new splits.',
+          400
+        );
+      }
+
+      if (isAlreadySplit && options.force) {
+        await client.deleteTransaction(id, options.budget);
+
+        const recreatedTransaction = await client.createTransaction(
+          {
+            transaction: {
+              account_id: existingTransaction.account_id,
+              date: existingTransaction.date,
+              amount: existingTransaction.amount,
+              payee_id: existingTransaction.payee_id,
+              payee_name: existingTransaction.payee_name,
+              category_id: null,
+              memo: existingTransaction.memo,
+              cleared: existingTransaction.cleared,
+              approved: existingTransaction.approved,
+              flag_color: existingTransaction.flag_color,
+              import_id: existingTransaction.import_id,
+              subtransactions: splitsInMilliunits,
+            },
           },
-        },
-        options.budget,
-      );
-      outputJson(transaction);
+          options.budget,
+        );
+        outputJson(recreatedTransaction);
+      } else {
+        const transaction = await client.updateTransaction(
+          id,
+          {
+            transaction: {
+              category_id: null,
+              subtransactions: splitsInMilliunits,
+            },
+          },
+          options.budget,
+        );
+        outputJson(transaction);
+      }
     }));
 
   cmd
