@@ -202,9 +202,11 @@ Use the YNAB web or mobile app for these operations.
 
 ## API Rate Limits
 
-- 200 requests per hour per access token
-- Rolling window
-- Returns HTTP 429 when exceeded
+The YNAB API enforces a rate limit of **200 requests per hour** per access token. When exceeded, the API returns HTTP 429 errors.
+
+**If you hit the rate limit:**
+- Wait 5-10 minutes before retrying (the limit uses a rolling 60-minute window)
+- For batch operations, add delays between requests: `sleep 20` in shell loops ensures ~180 requests/hour
 
 ## References
 

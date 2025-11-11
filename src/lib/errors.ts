@@ -75,7 +75,11 @@ export function sanitizeApiError(error: unknown): YnabError {
 }
 
 function formatErrorResponse(name: string, detail: string, statusCode: number): never {
-  outputJson({ error: { name, detail, statusCode } });
+  const enhancedDetail = name === 'too_many_requests'
+    ? `${detail}\n\nYNAB API limit: 200 requests/hour (rolling window). Wait a few minutes and retry.`
+    : detail;
+
+  outputJson({ error: { name, detail: enhancedDetail, statusCode } });
   process.exit(1);
 }
 
