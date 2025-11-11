@@ -266,7 +266,6 @@ export function createTransactionsCommand(): Command {
               cleared: existingTransaction.cleared,
               approved: existingTransaction.approved,
               flag_color: existingTransaction.flag_color,
-              import_id: existingTransaction.import_id,
               subtransactions: splitsInMilliunits,
             },
           },
