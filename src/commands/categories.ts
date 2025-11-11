@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { client } from '../lib/api-client.js';
-import { outputSuccess } from '../lib/output.js';
+import { outputJson } from '../lib/output.js';
 import { YnabCliError } from '../lib/errors.js';
 import { amountToMilliunits } from '../lib/utils.js';
 import { withErrorHandling } from '../lib/command-utils.js';
@@ -16,7 +16,7 @@ export function createCategoriesCommand(): Command {
     .option('--last-knowledge <number>', 'Last knowledge of server', parseInt)
     .action(withErrorHandling(async (options: { budget?: string; lastKnowledge?: number } & CommandOptions) => {
       const result = await client.getCategories(options.budget, options.lastKnowledge);
-      outputSuccess(result?.category_groups);
+      outputJson(result?.category_groups);
     }));
 
   cmd
@@ -26,7 +26,7 @@ export function createCategoriesCommand(): Command {
     .option('-b, --budget <id>', 'Budget ID')
     .action(withErrorHandling(async (id: string, options: CommandOptions) => {
       const category = await client.getCategory(id, options.budget);
-      outputSuccess(category);
+      outputJson(category);
     }));
 
   cmd
@@ -55,7 +55,7 @@ export function createCategoriesCommand(): Command {
         { category: { budgeted: milliunits } },
         options.budget,
       );
-      outputSuccess(category);
+      outputJson(category);
     }));
 
   cmd
@@ -81,7 +81,7 @@ export function createCategoriesCommand(): Command {
         type: options.type,
         lastKnowledgeOfServer: options.lastKnowledge,
       });
-      outputSuccess(result?.transactions);
+      outputJson(result?.transactions);
     }));
 
   return cmd;

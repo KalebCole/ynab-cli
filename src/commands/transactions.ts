@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { client } from '../lib/api-client.js';
-import { outputSuccess } from '../lib/output.js';
+import { outputJson } from '../lib/output.js';
 import { YnabCliError } from '../lib/errors.js';
 import { promptForTransaction } from '../lib/prompts.js';
 import { isInteractive, amountToMilliunits, applyTransactionFilters, applyFieldSelection, type TransactionLike } from '../lib/utils.js';
@@ -99,7 +99,7 @@ export function createTransactionsCommand(): Command {
 
       const selected = applyFieldSelection(filtered, options.fields);
 
-      outputSuccess(selected);
+      outputJson(selected);
     }));
 
   cmd
@@ -109,7 +109,7 @@ export function createTransactionsCommand(): Command {
     .option('-b, --budget <id>', 'Budget ID')
     .action(withErrorHandling(async (id: string, options: CommandOptions) => {
       const transaction = await client.getTransaction(id, options.budget);
-      outputSuccess(transaction);
+      outputJson(transaction);
     }));
 
   cmd
@@ -146,7 +146,7 @@ export function createTransactionsCommand(): Command {
         { transaction: transactionData },
         options.budget,
       );
-      outputSuccess(transaction);
+      outputJson(transaction);
     }));
 
   cmd
@@ -187,7 +187,7 @@ export function createTransactionsCommand(): Command {
         { transaction: transactionData },
         options.budget,
       );
-      outputSuccess(transaction);
+      outputJson(transaction);
     }));
 
   cmd
@@ -202,7 +202,7 @@ export function createTransactionsCommand(): Command {
       }
 
       const transaction = await client.deleteTransaction(id, options.budget);
-      outputSuccess({ message: 'Transaction deleted', transaction });
+      outputJson({ message: 'Transaction deleted', transaction });
     }));
 
   cmd
@@ -211,7 +211,7 @@ export function createTransactionsCommand(): Command {
     .option('-b, --budget <id>', 'Budget ID')
     .action(withErrorHandling(async (options: CommandOptions) => {
       const transactionIds = await client.importTransactions(options.budget);
-      outputSuccess({ transaction_ids: transactionIds });
+      outputJson({ transaction_ids: transactionIds });
     }));
 
   cmd
@@ -243,7 +243,7 @@ export function createTransactionsCommand(): Command {
         },
         options.budget,
       );
-      outputSuccess(transaction);
+      outputJson(transaction);
     }));
 
   cmd
@@ -308,7 +308,7 @@ export function createTransactionsCommand(): Command {
 
       const filteredTransactions = applyFieldSelection(transactions, options.fields);
 
-      outputSuccess(filteredTransactions);
+      outputJson(filteredTransactions);
     }));
 
   return cmd;

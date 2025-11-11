@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { client } from '../lib/api-client.js';
-import { outputSuccess } from '../lib/output.js';
+import { outputJson } from '../lib/output.js';
 import { withErrorHandling, confirmDelete } from '../lib/command-utils.js';
 import type { CommandOptions } from '../types/index.js';
 
@@ -14,7 +14,7 @@ export function createScheduledCommand(): Command {
     .option('--last-knowledge <number>', 'Last knowledge of server', parseInt)
     .action(withErrorHandling(async (options: { budget?: string; lastKnowledge?: number } & CommandOptions) => {
       const result = await client.getScheduledTransactions(options.budget, options.lastKnowledge);
-      outputSuccess(result?.scheduled_transactions);
+      outputJson(result?.scheduled_transactions);
     }));
 
   cmd
@@ -24,7 +24,7 @@ export function createScheduledCommand(): Command {
     .option('-b, --budget <id>', 'Budget ID')
     .action(withErrorHandling(async (id: string, options: CommandOptions) => {
       const scheduledTransaction = await client.getScheduledTransaction(id, options.budget);
-      outputSuccess(scheduledTransaction);
+      outputJson(scheduledTransaction);
     }));
 
   cmd
@@ -39,7 +39,7 @@ export function createScheduledCommand(): Command {
       }
 
       const scheduledTransaction = await client.deleteScheduledTransaction(id, options.budget);
-      outputSuccess({
+      outputJson({
         message: 'Scheduled transaction deleted',
         scheduled_transaction: scheduledTransaction,
       });

@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import { auth } from '../lib/auth.js';
 import { promptForAccessToken } from '../lib/prompts.js';
-import { outputJson, outputSuccess } from '../lib/output.js';
+import { outputJson } from '../lib/output.js';
 import { client } from '../lib/api-client.js';
 import { withErrorHandling } from '../lib/command-utils.js';
 
@@ -17,7 +17,7 @@ export function createAuthCommand(): Command {
 
       try {
         const user = await client.getUser();
-        outputSuccess({
+        outputJson({
           message: 'Successfully authenticated',
           user: { id: user?.id },
         });
@@ -40,7 +40,7 @@ export function createAuthCommand(): Command {
 
       try {
         const user = await client.getUser();
-        outputSuccess({ authenticated: true, user: { id: user?.id } });
+        outputJson({ authenticated: true, user: { id: user?.id } });
       } catch (error) {
         outputJson({ authenticated: false, message: 'Token exists but is invalid' });
       }
@@ -51,7 +51,7 @@ export function createAuthCommand(): Command {
     .description('Remove stored credentials')
     .action(withErrorHandling(async () => {
       await auth.logout();
-      outputSuccess({ message: 'Successfully logged out' });
+      outputJson({ message: 'Successfully logged out' });
     }));
 
   return cmd;

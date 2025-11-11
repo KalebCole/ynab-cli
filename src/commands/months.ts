@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { client } from '../lib/api-client.js';
-import { outputSuccess } from '../lib/output.js';
+import { outputJson } from '../lib/output.js';
 import { withErrorHandling } from '../lib/command-utils.js';
 import type { CommandOptions } from '../types/index.js';
 
@@ -14,7 +14,7 @@ export function createMonthsCommand(): Command {
     .option('--last-knowledge <number>', 'Last knowledge of server', parseInt)
     .action(withErrorHandling(async (options: { budget?: string; lastKnowledge?: number } & CommandOptions) => {
       const result = await client.getBudgetMonths(options.budget, options.lastKnowledge);
-      outputSuccess(result?.months);
+      outputJson(result?.months);
     }));
 
   cmd
@@ -24,7 +24,7 @@ export function createMonthsCommand(): Command {
     .option('-b, --budget <id>', 'Budget ID')
     .action(withErrorHandling(async (month: string, options: CommandOptions) => {
       const monthData = await client.getBudgetMonth(month, options.budget);
-      outputSuccess(monthData);
+      outputJson(monthData);
     }));
 
   return cmd;

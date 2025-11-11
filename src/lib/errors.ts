@@ -74,9 +74,13 @@ export function sanitizeApiError(error: unknown): YnabError {
   };
 }
 
+function enhanceRateLimitMessage(detail: string): string {
+  return `${detail}\n\nYNAB API limit: 200 requests/hour (rolling window). Wait a few minutes and retry.`;
+}
+
 function formatErrorResponse(name: string, detail: string, statusCode: number): never {
   const enhancedDetail = name === 'too_many_requests'
-    ? `${detail}\n\nYNAB API limit: 200 requests/hour (rolling window). Wait a few minutes and retry.`
+    ? enhanceRateLimitMessage(detail)
     : detail;
 
   outputJson({ error: { name, detail: enhancedDetail, statusCode } });

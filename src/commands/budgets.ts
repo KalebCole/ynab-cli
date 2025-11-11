@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import { client } from '../lib/api-client.js';
 import { config } from '../lib/config.js';
-import { outputSuccess } from '../lib/output.js';
+import { outputJson } from '../lib/output.js';
 import { YnabCliError } from '../lib/errors.js';
 import { withErrorHandling } from '../lib/command-utils.js';
 
@@ -14,7 +14,7 @@ export function createBudgetsCommand(): Command {
     .option('--include-accounts', 'Include accounts in response')
     .action(withErrorHandling(async (options: { includeAccounts?: boolean }) => {
       const result = await client.getBudgets(options.includeAccounts);
-      outputSuccess(result?.budgets);
+      outputJson(result?.budgets);
     }));
 
   cmd
@@ -23,7 +23,7 @@ export function createBudgetsCommand(): Command {
     .argument('[id]', 'Budget ID')
     .action(withErrorHandling(async (id: string | undefined) => {
       const result = await client.getBudget(id);
-      outputSuccess(result?.budget);
+      outputJson(result?.budget);
     }));
 
   cmd
@@ -32,7 +32,7 @@ export function createBudgetsCommand(): Command {
     .argument('[id]', 'Budget ID')
     .action(withErrorHandling(async (id: string | undefined) => {
       const settings = await client.getBudgetSettings(id);
-      outputSuccess(settings);
+      outputJson(settings);
     }));
 
   cmd
@@ -48,7 +48,7 @@ export function createBudgetsCommand(): Command {
       }
 
       config.setDefaultBudget(id);
-      outputSuccess({
+      outputJson({
         message: 'Default budget set',
         budget: { id: budget.id, name: budget.name },
       });

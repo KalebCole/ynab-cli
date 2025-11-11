@@ -10,7 +10,7 @@ type TransactionTypeFilter = 'uncategorized' | 'unapproved' | undefined;
 
 export class YnabClient {
   private api: ynab.API | null = null;
-  private hasShownEnvVarWarning = false;
+  private envVarWarningShown = false;
 
   async getApi(): Promise<ynab.API> {
     if (this.api) {
@@ -27,13 +27,13 @@ export class YnabClient {
       );
     }
 
-    if (!keychainToken && process.env.YNAB_API_KEY && !this.hasShownEnvVarWarning) {
+    if (!keychainToken && process.env.YNAB_API_KEY && !this.envVarWarningShown) {
       console.warn(
         '\x1b[33m⚠️  WARNING: Using YNAB_API_KEY environment variable.\n' +
         'Environment variables may be visible to other processes.\n' +
         'For better security, use: ynab auth login\x1b[0m\n'
       );
-      this.hasShownEnvVarWarning = true;
+      this.envVarWarningShown = true;
     }
 
     this.api = new ynab.API(accessToken);

@@ -1,7 +1,7 @@
 import { handleYnabError } from './errors.js';
 import { promptForConfirmation } from './prompts.js';
 import { isInteractive } from './utils.js';
-import { outputSuccess } from './output.js';
+import { outputJson } from './output.js';
 
 export function withErrorHandling<TArgs extends unknown[], R>(
   fn: (...args: TArgs) => Promise<R>,
@@ -28,7 +28,7 @@ export async function confirmDelete(
   );
 
   if (!confirmed) {
-    outputSuccess({ message: 'Operation cancelled' });
+    outputJson({ message: 'Operation cancelled' });
     return false;
   }
 

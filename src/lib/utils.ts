@@ -27,33 +27,25 @@ export function isInteractive(): boolean {
 }
 
 export function convertMilliunitsToAmounts(data: unknown): unknown {
-  if (data === null || data === undefined) {
-    return data;
-  }
+  if (data === null || data === undefined) return data;
+  if (Array.isArray(data)) return data.map(convertMilliunitsToAmounts);
+  if (typeof data !== 'object') return data;
 
-  if (Array.isArray(data)) {
-    return data.map(item => convertMilliunitsToAmounts(item));
-  }
-
-  if (typeof data === 'object') {
-    const converted: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(data)) {
-      if (isAmountField(key) && typeof value === 'number') {
-        converted[key] = milliunitsToAmount(value);
-      } else if (isDebtAmountMapField(key) && typeof value === 'object' && value !== null && !Array.isArray(value)) {
-        const convertedMap: Record<string, unknown> = {};
-        for (const [dateKey, amountValue] of Object.entries(value)) {
-          convertedMap[dateKey] = typeof amountValue === 'number' ? milliunitsToAmount(amountValue) : amountValue;
-        }
-        converted[key] = convertedMap;
-      } else {
-        converted[key] = convertMilliunitsToAmounts(value);
+  const converted: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(data)) {
+    if (isAmountField(key) && typeof value === 'number') {
+      converted[key] = milliunitsToAmount(value);
+    } else if (isDebtAmountMapField(key) && typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      const convertedMap: Record<string, unknown> = {};
+      for (const [dateKey, amountValue] of Object.entries(value)) {
+        convertedMap[dateKey] = typeof amountValue === 'number' ? milliunitsToAmount(amountValue) : amountValue;
       }
+      converted[key] = convertedMap;
+    } else {
+      converted[key] = convertMilliunitsToAmounts(value);
     }
-    return converted;
   }
-
-  return data;
+  return converted;
 }
 
 function isAmountField(fieldName: string): boolean {

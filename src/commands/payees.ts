@@ -1,6 +1,6 @@
 import { Command } from 'commander';
 import { client } from '../lib/api-client.js';
-import { outputSuccess } from '../lib/output.js';
+import { outputJson } from '../lib/output.js';
 import { YnabCliError } from '../lib/errors.js';
 import { withErrorHandling } from '../lib/command-utils.js';
 import type { CommandOptions } from '../types/index.js';
@@ -15,7 +15,7 @@ export function createPayeesCommand(): Command {
     .option('--last-knowledge <number>', 'Last knowledge of server', parseInt)
     .action(withErrorHandling(async (options: { budget?: string; lastKnowledge?: number } & CommandOptions) => {
       const result = await client.getPayees(options.budget, options.lastKnowledge);
-      outputSuccess(result?.payees);
+      outputJson(result?.payees);
     }));
 
   cmd
@@ -25,7 +25,7 @@ export function createPayeesCommand(): Command {
     .option('-b, --budget <id>', 'Budget ID')
     .action(withErrorHandling(async (id: string, options: CommandOptions) => {
       const payee = await client.getPayee(id, options.budget);
-      outputSuccess(payee);
+      outputJson(payee);
     }));
 
   cmd
@@ -44,7 +44,7 @@ export function createPayeesCommand(): Command {
         { payee: { name: options.name } },
         options.budget,
       );
-      outputSuccess(payee);
+      outputJson(payee);
     }));
 
   cmd
@@ -54,7 +54,7 @@ export function createPayeesCommand(): Command {
     .option('-b, --budget <id>', 'Budget ID')
     .action(withErrorHandling(async (id: string, options: CommandOptions) => {
       const locations = await client.getPayeeLocationsByPayee(id, options.budget);
-      outputSuccess(locations);
+      outputJson(locations);
     }));
 
   cmd
@@ -80,7 +80,7 @@ export function createPayeesCommand(): Command {
         type: options.type,
         lastKnowledgeOfServer: options.lastKnowledge,
       });
-      outputSuccess(result?.transactions);
+      outputJson(result?.transactions);
     }));
 
   return cmd;
