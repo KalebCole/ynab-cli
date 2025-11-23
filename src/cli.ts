@@ -13,12 +13,14 @@ import { createPayeesCommand } from './commands/payees.js';
 import { createMonthsCommand } from './commands/months.js';
 import { createApiCommand } from './commands/api.js';
 
+declare const __VERSION__: string;
+
 const program = new Command();
 
 program
   .name('ynab')
   .description('A command-line interface for You Need a Budget (YNAB)')
-  .version('1.0.0')
+  .version(__VERSION__)
   .option('-c, --compact', 'Minified JSON output (single line)')
   .hook('preAction', (thisCommand) => {
     const options = thisCommand.opts();
