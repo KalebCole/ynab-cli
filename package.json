@@ -1,6 +1,6 @@
 {
   "name": "@stephendolan/ynab-cli",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "A command-line interface for You Need a Budget (YNAB)",
   "type": "module",
   "main": "./dist/cli.js",
@@ -15,7 +15,8 @@
     "typecheck": "tsc --noEmit",
     "link": "npm run build && npm link",
     "start": "node dist/cli.js",
-    "audit": "npm audit --audit-level=moderate"
+    "audit": "npm audit --audit-level=moderate",
+    "prepublishOnly": "npm run build"
   },
   "keywords": [
     "ynab",
