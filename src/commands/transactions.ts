@@ -137,9 +137,12 @@ export function createTransactionsCommand(): Command {
       cleared?: string;
       approved?: boolean;
     } & CommandOptions) => {
-      const shouldPrompt = isInteractive() && !options.account && !options.amount;
+      const shouldPrompt = isInteractive() && !options.amount;
+      if (shouldPrompt && !options.account) {
+        throw new YnabCliError('--account is required. Interactive mode cannot auto-select an account.', 400);
+      }
       const transactionData = shouldPrompt
-        ? await promptForTransaction()
+        ? { ...(await promptForTransaction()), account_id: options.account }
         : buildTransactionData(options);
 
       const transaction = await client.createTransaction(

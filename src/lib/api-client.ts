@@ -12,6 +12,11 @@ export class YnabClient {
   private api: ynab.API | null = null;
   private envVarWarningShown = false;
 
+  clearApi(): void {
+    this.api = null;
+    this.envVarWarningShown = false;
+  }
+
   async getApi(): Promise<ynab.API> {
     if (this.api) {
       return this.api;

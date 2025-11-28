@@ -10,7 +10,7 @@ export async function promptForAccessToken(): Promise<string> {
       validate: (input: string) => !!input.trim() || 'Access token is required',
     },
   ]);
-  return token;
+  return token.trim();
 }
 
 export async function promptForBudget(

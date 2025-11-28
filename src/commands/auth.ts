@@ -14,6 +14,7 @@ export function createAuthCommand(): Command {
     .action(withErrorHandling(async () => {
       const token = await promptForAccessToken();
       await auth.setAccessToken(token);
+      client.clearApi();
 
       try {
         const user = await client.getUser();
@@ -23,6 +24,7 @@ export function createAuthCommand(): Command {
         });
       } catch (error) {
         await auth.deleteAccessToken();
+        client.clearApi();
         throw error;
       }
     }));
@@ -51,6 +53,7 @@ export function createAuthCommand(): Command {
     .description('Remove stored credentials')
     .action(withErrorHandling(async () => {
       await auth.logout();
+      client.clearApi();
       outputJson({ message: 'Successfully logged out' });
     }));
 

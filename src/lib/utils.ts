@@ -1,4 +1,5 @@
 import { format, parseISO } from 'date-fns';
+import { YnabCliError } from './errors.js';
 
 export function milliunitsToAmount(milliunits: number): number {
   return milliunits / 1000;
@@ -82,7 +83,7 @@ function isDebtAmountMapField(fieldName: string): boolean {
 export function parseApprovedFilter(value: string): boolean {
   const normalized = value.toLowerCase();
   if (normalized !== 'true' && normalized !== 'false') {
-    throw new Error(`--approved must be 'true' or 'false', got '${value}'`);
+    throw new YnabCliError(`--approved must be 'true' or 'false', got '${value}'`, 400);
   }
   return normalized === 'true';
 }
@@ -93,7 +94,7 @@ export function parseStatusFilter(value: string): string[] {
 
   for (const status of statuses) {
     if (!validStatuses.includes(status)) {
-      throw new Error(`Invalid status '${status}'. Must be one of: ${validStatuses.join(', ')}`);
+      throw new YnabCliError(`Invalid status '${status}'. Must be one of: ${validStatuses.join(', ')}`, 400);
     }
   }
 
