@@ -10,27 +10,31 @@ const KEYRING_UNAVAILABLE_ERROR =
   'Then reinstall: npm install -g @stephendolan/ynab-cli\n' +
   'Alternatively, use the YNAB_API_KEY environment variable.';
 
-let keyring: Entry | undefined;
+let keyring: Entry | null | undefined = undefined;
 
-try {
-  keyring = new Entry(SERVICE_NAME, ACCOUNT_NAME);
-} catch (error) {
-  if (process.env.NODE_ENV !== 'test') {
-    console.error(
-      'Warning: Keychain storage unavailable. Credentials will not be stored securely.\n' +
-        'On Linux, install libsecret: sudo apt-get install libsecret-1-dev\n' +
-        'On macOS, ensure you have access to the system Keychain.\n' +
-        'Falling back to environment variable only (YNAB_API_KEY).\n'
-    );
+function getKeyring(): Entry | null {
+  if (keyring !== undefined) {
+    return keyring;
   }
+  try {
+    keyring = new Entry(SERVICE_NAME, ACCOUNT_NAME);
+  } catch {
+    keyring = null;
+  }
+  return keyring;
+}
+
+export function resetKeyringForTesting(): void {
+  keyring = undefined;
 }
 
 export class AuthManager {
   async getAccessToken(): Promise<string | null> {
-    if (keyring) {
+    const entry = getKeyring();
+    if (entry) {
       try {
-        return keyring.getPassword();
-      } catch (error) {
+        return entry.getPassword();
+      } catch {
         return null;
       }
     }
@@ -38,16 +42,26 @@ export class AuthManager {
   }
 
   async setAccessToken(token: string): Promise<void> {
-    if (keyring) {
-      keyring.setPassword(token);
-    } else {
+    const entry = getKeyring();
+    if (!entry) {
       throw new Error(KEYRING_UNAVAILABLE_ERROR);
+    }
+    try {
+      entry.setPassword(token);
+    } catch (error) {
+      throw new Error(
+        `Failed to store token in keychain: ${error instanceof Error ? error.message : error}\n\n` +
+          'On Linux, ensure the Secret Service is running and unlocked.\n' +
+          'Try: gnome-keyring-daemon --unlock\n' +
+          'Or use the YNAB_API_KEY environment variable instead.'
+      );
     }
   }
 
   async deleteAccessToken(): Promise<boolean> {
-    if (keyring) {
-      return keyring.deletePassword();
+    const entry = getKeyring();
+    if (entry) {
+      return entry.deletePassword();
     }
     return false;
   }
