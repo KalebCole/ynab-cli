@@ -520,8 +520,9 @@ export class YnabClient {
         : path;
 
       const url = `https://api.ynab.com/v1${fullPath}`;
+      const accessToken = (await auth.getAccessToken()) || process.env.YNAB_API_KEY;
       const headers = {
-        Authorization: `Bearer ${await auth.getAccessToken()}`,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       };
 
