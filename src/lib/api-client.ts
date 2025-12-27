@@ -28,15 +28,15 @@ export class YnabClient {
     if (!accessToken) {
       throw new YnabCliError(
         'Not authenticated. Please run: ynab auth login or set YNAB_API_KEY environment variable',
-        401,
+        401
       );
     }
 
     if (!keychainToken && process.env.YNAB_API_KEY && !this.envVarWarningShown) {
       console.warn(
         '\x1b[33m⚠️  WARNING: Using YNAB_API_KEY environment variable.\n' +
-        'Environment variables may be visible to other processes.\n' +
-        'For better security, use: ynab auth login\x1b[0m\n'
+          'Environment variables may be visible to other processes.\n' +
+          'For better security, use: ynab auth login\x1b[0m\n'
       );
       this.envVarWarningShown = true;
     }
@@ -46,13 +46,12 @@ export class YnabClient {
   }
 
   async getBudgetId(budgetIdOrDefault?: string): Promise<string> {
-    const budgetId =
-      budgetIdOrDefault || config.getDefaultBudget() || process.env.YNAB_BUDGET_ID;
+    const budgetId = budgetIdOrDefault || config.getDefaultBudget() || process.env.YNAB_BUDGET_ID;
 
     if (!budgetId) {
       throw new YnabCliError(
         'No budget specified. Use --budget flag, set default with "ynab budgets set-default", or set YNAB_BUDGET_ID environment variable',
-        400,
+        400
       );
     }
 
@@ -128,15 +127,6 @@ export class YnabClient {
     });
   }
 
-  async createAccount(accountData: ynab.PostAccountWrapper, budgetId?: string) {
-    return this.withErrorHandling(async () => {
-      const api = await this.getApi();
-      const id = await this.getBudgetId(budgetId);
-      const response = await api.accounts.createAccount(id, accountData);
-      return response.data.account;
-    });
-  }
-
   async getCategories(budgetId?: string, lastKnowledgeOfServer?: number) {
     return this.withErrorHandling(async () => {
       const api = await this.getApi();
@@ -158,33 +148,11 @@ export class YnabClient {
     });
   }
 
-  async updateCategory(
-    categoryId: string,
-    data: ynab.PatchCategoryWrapper,
-    budgetId?: string,
-  ) {
-    return this.withErrorHandling(async () => {
-      const api = await this.getApi();
-      const id = await this.getBudgetId(budgetId);
-      const response = await api.categories.updateCategory(id, categoryId, data);
-      return response.data.category;
-    });
-  }
-
-  async getMonthCategory(month: string, categoryId: string, budgetId?: string) {
-    return this.withErrorHandling(async () => {
-      const api = await this.getApi();
-      const id = await this.getBudgetId(budgetId);
-      const response = await api.categories.getMonthCategoryById(id, month, categoryId);
-      return response.data.category;
-    });
-  }
-
   async updateMonthCategory(
     month: string,
     categoryId: string,
     data: ynab.PatchMonthCategoryWrapper,
-    budgetId?: string,
+    budgetId?: string
   ) {
     return this.withErrorHandling(async () => {
       const api = await this.getApi();
@@ -221,24 +189,6 @@ export class YnabClient {
       const id = await this.getBudgetId(budgetId);
       const response = await api.payees.updatePayee(id, payeeId, data);
       return response.data.payee;
-    });
-  }
-
-  async getPayeeLocations(budgetId?: string) {
-    return this.withErrorHandling(async () => {
-      const api = await this.getApi();
-      const id = await this.getBudgetId(budgetId);
-      const response = await api.payeeLocations.getPayeeLocations(id);
-      return response.data.payee_locations;
-    });
-  }
-
-  async getPayeeLocation(payeeLocationId: string, budgetId?: string) {
-    return this.withErrorHandling(async () => {
-      const api = await this.getApi();
-      const id = await this.getBudgetId(budgetId);
-      const response = await api.payeeLocations.getPayeeLocationById(id, payeeLocationId);
-      return response.data.payee_location;
     });
   }
 
@@ -285,7 +235,7 @@ export class YnabClient {
         id,
         params.sinceDate,
         params.type as TransactionTypeFilter,
-        params.lastKnowledgeOfServer,
+        params.lastKnowledgeOfServer
       );
       return {
         transactions: response.data.transactions,
@@ -294,12 +244,15 @@ export class YnabClient {
     });
   }
 
-  async getTransactionsByAccount(accountId: string, params: {
-    budgetId?: string;
-    sinceDate?: string;
-    type?: string;
-    lastKnowledgeOfServer?: number;
-  }) {
+  async getTransactionsByAccount(
+    accountId: string,
+    params: {
+      budgetId?: string;
+      sinceDate?: string;
+      type?: string;
+      lastKnowledgeOfServer?: number;
+    }
+  ) {
     return this.withErrorHandling(async () => {
       const api = await this.getApi();
       const id = await this.getBudgetId(params.budgetId);
@@ -308,7 +261,7 @@ export class YnabClient {
         accountId,
         params.sinceDate,
         params.type as TransactionTypeFilter,
-        params.lastKnowledgeOfServer,
+        params.lastKnowledgeOfServer
       );
       return {
         transactions: response.data.transactions,
@@ -317,12 +270,15 @@ export class YnabClient {
     });
   }
 
-  async getTransactionsByCategory(categoryId: string, params: {
-    budgetId?: string;
-    sinceDate?: string;
-    type?: string;
-    lastKnowledgeOfServer?: number;
-  }) {
+  async getTransactionsByCategory(
+    categoryId: string,
+    params: {
+      budgetId?: string;
+      sinceDate?: string;
+      type?: string;
+      lastKnowledgeOfServer?: number;
+    }
+  ) {
     return this.withErrorHandling(async () => {
       const api = await this.getApi();
       const id = await this.getBudgetId(params.budgetId);
@@ -331,7 +287,7 @@ export class YnabClient {
         categoryId,
         params.sinceDate,
         params.type as TransactionTypeFilter,
-        params.lastKnowledgeOfServer,
+        params.lastKnowledgeOfServer
       );
       return {
         transactions: response.data.transactions,
@@ -340,12 +296,15 @@ export class YnabClient {
     });
   }
 
-  async getTransactionsByPayee(payeeId: string, params: {
-    budgetId?: string;
-    sinceDate?: string;
-    type?: string;
-    lastKnowledgeOfServer?: number;
-  }) {
+  async getTransactionsByPayee(
+    payeeId: string,
+    params: {
+      budgetId?: string;
+      sinceDate?: string;
+      type?: string;
+      lastKnowledgeOfServer?: number;
+    }
+  ) {
     return this.withErrorHandling(async () => {
       const api = await this.getApi();
       const id = await this.getBudgetId(params.budgetId);
@@ -354,7 +313,7 @@ export class YnabClient {
         payeeId,
         params.sinceDate,
         params.type as TransactionTypeFilter,
-        params.lastKnowledgeOfServer,
+        params.lastKnowledgeOfServer
       );
       return {
         transactions: response.data.transactions,
@@ -372,10 +331,7 @@ export class YnabClient {
     });
   }
 
-  async createTransaction(
-    transactionData: ynab.PostTransactionsWrapper,
-    budgetId?: string,
-  ) {
+  async createTransaction(transactionData: ynab.PostTransactionsWrapper, budgetId?: string) {
     return this.withErrorHandling(async () => {
       const api = await this.getApi();
       const id = await this.getBudgetId(budgetId);
@@ -384,44 +340,16 @@ export class YnabClient {
     });
   }
 
-  async createTransactions(
-    transactionsData: ynab.PostTransactionsWrapper,
-    budgetId?: string,
-  ) {
-    return this.withErrorHandling(async () => {
-      const api = await this.getApi();
-      const id = await this.getBudgetId(budgetId);
-      const response = await api.transactions.createTransactions(id, transactionsData);
-      return response.data;
-    });
-  }
-
   async updateTransaction(
     transactionId: string,
     transactionData: ynab.PutTransactionWrapper,
-    budgetId?: string,
+    budgetId?: string
   ) {
     return this.withErrorHandling(async () => {
       const api = await this.getApi();
       const id = await this.getBudgetId(budgetId);
-      const response = await api.transactions.updateTransaction(
-        id,
-        transactionId,
-        transactionData,
-      );
+      const response = await api.transactions.updateTransaction(id, transactionId, transactionData);
       return response.data.transaction;
-    });
-  }
-
-  async updateTransactions(
-    transactionsData: ynab.PatchTransactionsWrapper,
-    budgetId?: string,
-  ) {
-    return this.withErrorHandling(async () => {
-      const api = await this.getApi();
-      const id = await this.getBudgetId(budgetId);
-      const response = await api.transactions.updateTransactions(id, transactionsData);
-      return response.data;
     });
   }
 
@@ -449,7 +377,7 @@ export class YnabClient {
       const id = await this.getBudgetId(budgetId);
       const response = await api.scheduledTransactions.getScheduledTransactions(
         id,
-        lastKnowledgeOfServer,
+        lastKnowledgeOfServer
       );
       return {
         scheduled_transactions: response.data.scheduled_transactions,
@@ -464,36 +392,7 @@ export class YnabClient {
       const id = await this.getBudgetId(budgetId);
       const response = await api.scheduledTransactions.getScheduledTransactionById(
         id,
-        scheduledTransactionId,
-      );
-      return response.data.scheduled_transaction;
-    });
-  }
-
-  async createScheduledTransaction(
-    data: ynab.PostScheduledTransactionWrapper,
-    budgetId?: string,
-  ) {
-    return this.withErrorHandling(async () => {
-      const api = await this.getApi();
-      const id = await this.getBudgetId(budgetId);
-      const response = await api.scheduledTransactions.createScheduledTransaction(id, data);
-      return response.data.scheduled_transaction;
-    });
-  }
-
-  async updateScheduledTransaction(
-    scheduledTransactionId: string,
-    data: ynab.PutScheduledTransactionWrapper,
-    budgetId?: string,
-  ) {
-    return this.withErrorHandling(async () => {
-      const api = await this.getApi();
-      const id = await this.getBudgetId(budgetId);
-      const response = await api.scheduledTransactions.updateScheduledTransaction(
-        id,
-        scheduledTransactionId,
-        data,
+        scheduledTransactionId
       );
       return response.data.scheduled_transaction;
     });
@@ -505,7 +404,7 @@ export class YnabClient {
       const id = await this.getBudgetId(budgetId);
       const response = await api.scheduledTransactions.deleteScheduledTransaction(
         id,
-        scheduledTransactionId,
+        scheduledTransactionId
       );
       return response.data.scheduled_transaction;
     });
@@ -540,7 +439,7 @@ export class YnabClient {
       });
 
       if (!response.ok) {
-        const errorData = await response.json() as Record<string, unknown>;
+        const errorData = (await response.json()) as Record<string, unknown>;
         throw { error: sanitizeApiError(errorData.error || errorData) };
       }
 

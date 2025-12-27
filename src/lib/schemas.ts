@@ -12,18 +12,12 @@ export const TransactionSplitSchema = z.array(
 
 export const ApiDataSchema = z.record(z.any());
 
-export function validateJson<T>(
-  data: unknown,
-  schema: z.ZodSchema<T>,
-  fieldName: string
-): T {
+export function validateJson<T>(data: unknown, schema: z.ZodSchema<T>, fieldName: string): T {
   try {
     return schema.parse(data);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const issues = error.issues
-        .map(i => `${i.path.join('.')}: ${i.message}`)
-        .join(', ');
+      const issues = error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join(', ');
       throw new YnabCliError(`Invalid ${fieldName}: ${issues}`, 400);
     }
     throw error;

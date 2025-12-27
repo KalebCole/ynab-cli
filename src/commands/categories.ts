@@ -14,20 +14,26 @@ export function createCategoriesCommand(): Command {
     .description('List all categories')
     .option('-b, --budget <id>', 'Budget ID')
     .option('--last-knowledge <number>', 'Last knowledge of server', parseInt)
-    .action(withErrorHandling(async (options: { budget?: string; lastKnowledge?: number } & CommandOptions) => {
-      const result = await client.getCategories(options.budget, options.lastKnowledge);
-      outputJson(result?.category_groups);
-    }));
+    .action(
+      withErrorHandling(
+        async (options: { budget?: string; lastKnowledge?: number } & CommandOptions) => {
+          const result = await client.getCategories(options.budget, options.lastKnowledge);
+          outputJson(result?.category_groups);
+        }
+      )
+    );
 
   cmd
     .command('view')
     .description('View category details')
     .argument('<id>', 'Category ID')
     .option('-b, --budget <id>', 'Budget ID')
-    .action(withErrorHandling(async (id: string, options: CommandOptions) => {
-      const category = await client.getCategory(id, options.budget);
-      outputJson(category);
-    }));
+    .action(
+      withErrorHandling(async (id: string, options: CommandOptions) => {
+        const category = await client.getCategory(id, options.budget);
+        outputJson(category);
+      })
+    );
 
   cmd
     .command('budget')
@@ -36,27 +42,31 @@ export function createCategoriesCommand(): Command {
     .requiredOption('--month <month>', 'Month in YYYY-MM-DD format (e.g., 2025-07-01)')
     .requiredOption('--amount <amount>', 'Total budgeted amount to set (e.g., 100.50)', parseFloat)
     .option('-b, --budget <id>', 'Budget ID')
-    .action(withErrorHandling(async (
-      id: string,
-      options: {
-        month: string;
-        amount: number;
-        budget?: string;
-      } & CommandOptions,
-    ) => {
-      if (isNaN(options.amount)) {
-        throw new YnabCliError('Amount must be a valid number', 400);
-      }
+    .action(
+      withErrorHandling(
+        async (
+          id: string,
+          options: {
+            month: string;
+            amount: number;
+            budget?: string;
+          } & CommandOptions
+        ) => {
+          if (isNaN(options.amount)) {
+            throw new YnabCliError('Amount must be a valid number', 400);
+          }
 
-      const milliunits = amountToMilliunits(options.amount);
-      const category = await client.updateMonthCategory(
-        options.month,
-        id,
-        { category: { budgeted: milliunits } },
-        options.budget,
-      );
-      outputJson(category);
-    }));
+          const milliunits = amountToMilliunits(options.amount);
+          const category = await client.updateMonthCategory(
+            options.month,
+            id,
+            { category: { budgeted: milliunits } },
+            options.budget
+          );
+          outputJson(category);
+        }
+      )
+    );
 
   cmd
     .command('transactions')
@@ -66,23 +76,27 @@ export function createCategoriesCommand(): Command {
     .option('--since <date>', 'Filter transactions since date (YYYY-MM-DD)')
     .option('--type <type>', 'Filter by transaction type')
     .option('--last-knowledge <number>', 'Last knowledge of server', parseInt)
-    .action(withErrorHandling(async (
-      id: string,
-      options: {
-        budget?: string;
-        since?: string;
-        type?: string;
-        lastKnowledge?: number;
-      } & CommandOptions,
-    ) => {
-      const result = await client.getTransactionsByCategory(id, {
-        budgetId: options.budget,
-        sinceDate: options.since,
-        type: options.type,
-        lastKnowledgeOfServer: options.lastKnowledge,
-      });
-      outputJson(result?.transactions);
-    }));
+    .action(
+      withErrorHandling(
+        async (
+          id: string,
+          options: {
+            budget?: string;
+            since?: string;
+            type?: string;
+            lastKnowledge?: number;
+          } & CommandOptions
+        ) => {
+          const result = await client.getTransactionsByCategory(id, {
+            budgetId: options.budget,
+            sinceDate: options.since,
+            type: options.type,
+            lastKnowledgeOfServer: options.lastKnowledge,
+          });
+          outputJson(result?.transactions);
+        }
+      )
+    );
 
   return cmd;
 }

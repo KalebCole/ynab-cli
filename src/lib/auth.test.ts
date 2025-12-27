@@ -76,7 +76,7 @@ describe('AuthManager', () => {
       });
 
       await expect(auth.setAccessToken(testToken)).rejects.toThrow(
-        /Failed to store token in keychain/,
+        /Failed to store token in keychain/
       );
     });
   });

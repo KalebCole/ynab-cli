@@ -11,20 +11,24 @@ export function createAccountsCommand(): Command {
     .command('list')
     .description('List all accounts')
     .option('-b, --budget <id>', 'Budget ID')
-    .action(withErrorHandling(async (options: CommandOptions) => {
-      const result = await client.getAccounts(options.budget);
-      outputJson(result?.accounts);
-    }));
+    .action(
+      withErrorHandling(async (options: CommandOptions) => {
+        const result = await client.getAccounts(options.budget);
+        outputJson(result?.accounts);
+      })
+    );
 
   cmd
     .command('view')
     .description('View account details')
     .argument('<id>', 'Account ID')
     .option('-b, --budget <id>', 'Budget ID')
-    .action(withErrorHandling(async (id: string, options: CommandOptions) => {
-      const account = await client.getAccount(id, options.budget);
-      outputJson(account);
-    }));
+    .action(
+      withErrorHandling(async (id: string, options: CommandOptions) => {
+        const account = await client.getAccount(id, options.budget);
+        outputJson(account);
+      })
+    );
 
   cmd
     .command('transactions')
@@ -33,21 +37,25 @@ export function createAccountsCommand(): Command {
     .option('-b, --budget <id>', 'Budget ID')
     .option('--since <date>', 'Filter transactions since date (YYYY-MM-DD)')
     .option('--type <type>', 'Filter by transaction type')
-    .action(withErrorHandling(async (
-      id: string,
-      options: {
-        budget?: string;
-        since?: string;
-        type?: string;
-      } & CommandOptions,
-    ) => {
-      const result = await client.getTransactionsByAccount(id, {
-        budgetId: options.budget,
-        sinceDate: options.since,
-        type: options.type,
-      });
-      outputJson(result?.transactions);
-    }));
+    .action(
+      withErrorHandling(
+        async (
+          id: string,
+          options: {
+            budget?: string;
+            since?: string;
+            type?: string;
+          } & CommandOptions
+        ) => {
+          const result = await client.getTransactionsByAccount(id, {
+            budgetId: options.budget,
+            sinceDate: options.since,
+            type: options.type,
+          });
+          outputJson(result?.transactions);
+        }
+      )
+    );
 
   return cmd;
 }

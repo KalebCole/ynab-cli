@@ -9,10 +9,12 @@ export function createUserCommand(): Command {
   cmd
     .command('info')
     .description('Get authenticated user information')
-    .action(withErrorHandling(async () => {
-      const user = await client.getUser();
-      outputJson(user);
-    }));
+    .action(
+      withErrorHandling(async () => {
+        const user = await client.getUser();
+        outputJson(user);
+      })
+    );
 
   return cmd;
 }

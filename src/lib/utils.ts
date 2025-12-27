@@ -1,4 +1,3 @@
-import { format, parseISO } from 'date-fns';
 import { YnabCliError } from './errors.js';
 
 export function milliunitsToAmount(milliunits: number): number {
@@ -7,20 +6,6 @@ export function milliunitsToAmount(milliunits: number): number {
 
 export function amountToMilliunits(amount: number): number {
   return Math.round(amount * 1000);
-}
-
-export function formatCurrency(milliunits: number, currencySymbol = '$'): string {
-  const amount = milliunitsToAmount(milliunits);
-  return `${currencySymbol}${amount.toFixed(2)}`;
-}
-
-export function formatDate(isoDate: string, formatString = 'yyyy-MM-dd'): string {
-  return format(parseISO(isoDate), formatString);
-}
-
-export function parseDate(dateString: string): string {
-  const date = parseISO(dateString);
-  return format(date, 'yyyy-MM-dd');
 }
 
 export function isInteractive(): boolean {
@@ -36,10 +21,16 @@ export function convertMilliunitsToAmounts(data: unknown): unknown {
   for (const [key, value] of Object.entries(data)) {
     if (isAmountField(key) && typeof value === 'number') {
       converted[key] = milliunitsToAmount(value);
-    } else if (isDebtAmountMapField(key) && typeof value === 'object' && value !== null && !Array.isArray(value)) {
+    } else if (
+      isDebtAmountMapField(key) &&
+      typeof value === 'object' &&
+      value !== null &&
+      !Array.isArray(value)
+    ) {
       const convertedMap: Record<string, unknown> = {};
       for (const [dateKey, amountValue] of Object.entries(value)) {
-        convertedMap[dateKey] = typeof amountValue === 'number' ? milliunitsToAmount(amountValue) : amountValue;
+        convertedMap[dateKey] =
+          typeof amountValue === 'number' ? milliunitsToAmount(amountValue) : amountValue;
       }
       converted[key] = convertedMap;
     } else {
@@ -89,12 +80,15 @@ export function parseApprovedFilter(value: string): boolean {
 }
 
 export function parseStatusFilter(value: string): string[] {
-  const statuses = value.split(',').map(s => s.trim().toLowerCase());
+  const statuses = value.split(',').map((s) => s.trim().toLowerCase());
   const validStatuses = ['cleared', 'uncleared', 'reconciled'];
 
   for (const status of statuses) {
     if (!validStatuses.includes(status)) {
-      throw new YnabCliError(`Invalid status '${status}'. Must be one of: ${validStatuses.join(', ')}`, 400);
+      throw new YnabCliError(
+        `Invalid status '${status}'. Must be one of: ${validStatuses.join(', ')}`,
+        400
+      );
     }
   }
 
@@ -108,37 +102,40 @@ export type TransactionLike = {
   cleared: string;
 };
 
-export function applyTransactionFilters<T extends TransactionLike>(transactions: T[], filters: {
-  until?: string;
-  approved?: string;
-  status?: string;
-  minAmount?: number;
-  maxAmount?: number;
-}): T[] {
+export function applyTransactionFilters<T extends TransactionLike>(
+  transactions: T[],
+  filters: {
+    until?: string;
+    approved?: string;
+    status?: string;
+    minAmount?: number;
+    maxAmount?: number;
+  }
+): T[] {
   let filtered = transactions;
 
   if (filters.until) {
-    filtered = filtered.filter(t => t.date <= filters.until!);
+    filtered = filtered.filter((t) => t.date <= filters.until!);
   }
 
   if (filters.approved !== undefined) {
     const approvedValue = parseApprovedFilter(filters.approved);
-    filtered = filtered.filter(t => t.approved === approvedValue);
+    filtered = filtered.filter((t) => t.approved === approvedValue);
   }
 
   if (filters.status) {
     const statuses = parseStatusFilter(filters.status);
-    filtered = filtered.filter(t => statuses.includes(t.cleared.toLowerCase()));
+    filtered = filtered.filter((t) => statuses.includes(t.cleared.toLowerCase()));
   }
 
   if (filters.minAmount !== undefined) {
     const minMilliunits = amountToMilliunits(filters.minAmount);
-    filtered = filtered.filter(t => t.amount >= minMilliunits);
+    filtered = filtered.filter((t) => t.amount >= minMilliunits);
   }
 
   if (filters.maxAmount !== undefined) {
     const maxMilliunits = amountToMilliunits(filters.maxAmount);
-    filtered = filtered.filter(t => t.amount <= maxMilliunits);
+    filtered = filtered.filter((t) => t.amount <= maxMilliunits);
   }
 
   return filtered;
@@ -147,15 +144,15 @@ export function applyTransactionFilters<T extends TransactionLike>(transactions:
 export function applyFieldSelection<T>(items: T[], fields?: string): Partial<T>[] {
   if (!fields) return items;
 
-  const fieldList = fields.split(',').map(f => f.trim());
-  return items.map(item => {
+  const fieldList = fields.split(',').map((f) => f.trim());
+  return items.map((item) => {
     const filtered: Partial<T> = {};
     const itemRecord = item as Record<string, unknown>;
-    fieldList.forEach(field => {
+    for (const field of fieldList) {
       if (field in itemRecord) {
         (filtered as Record<string, unknown>)[field] = itemRecord[field];
       }
-    });
+    }
     return filtered;
   });
 }

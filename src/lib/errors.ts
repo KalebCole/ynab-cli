@@ -4,7 +4,7 @@ import { outputJson } from './output.js';
 export class YnabCliError extends Error {
   constructor(
     message: string,
-    public statusCode?: number,
+    public statusCode?: number
   ) {
     super(message);
     this.name = 'YnabCliError';
@@ -79,9 +79,7 @@ function enhanceRateLimitMessage(detail: string): string {
 }
 
 function formatErrorResponse(name: string, detail: string, statusCode: number): never {
-  const enhancedDetail = name === 'too_many_requests'
-    ? enhanceRateLimitMessage(detail)
-    : detail;
+  const enhancedDetail = name === 'too_many_requests' ? enhanceRateLimitMessage(detail) : detail;
 
   outputJson({ error: { name, detail: enhancedDetail, statusCode } });
   process.exit(1);
@@ -99,7 +97,7 @@ export function handleYnabError(error: unknown): never {
     formatErrorResponse(
       ynabError.name,
       ynabError.detail,
-      ERROR_STATUS_CODES[ynabError.name] || 500,
+      ERROR_STATUS_CODES[ynabError.name] || 500
     );
   }
 

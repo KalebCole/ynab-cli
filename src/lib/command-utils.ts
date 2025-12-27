@@ -4,7 +4,7 @@ import { isInteractive } from './utils.js';
 import { outputJson } from './output.js';
 
 export function withErrorHandling<TArgs extends unknown[], R>(
-  fn: (...args: TArgs) => Promise<R>,
+  fn: (...args: TArgs) => Promise<R>
 ): (...args: TArgs) => Promise<void> {
   return async (...args: TArgs) => {
     try {
@@ -17,14 +17,14 @@ export function withErrorHandling<TArgs extends unknown[], R>(
 
 export async function confirmDelete(
   itemType: string,
-  skipConfirmation: boolean = false,
+  skipConfirmation: boolean = false
 ): Promise<boolean> {
   if (skipConfirmation || !isInteractive()) {
     return true;
   }
 
   const confirmed = await promptForConfirmation(
-    `Are you sure you want to delete this ${itemType}?`,
+    `Are you sure you want to delete this ${itemType}?`
   );
 
   if (!confirmed) {
@@ -37,7 +37,7 @@ export async function confirmDelete(
 
 export function buildUpdateObject<T>(
   options: T,
-  mapping: Record<string, string>,
+  mapping: Record<string, string>
 ): Record<string, unknown> {
   const result: Record<string, unknown> = {};
   const optionsRecord = options as Record<string, unknown>;

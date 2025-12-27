@@ -11,51 +11,57 @@ export function createAuthCommand(): Command {
   cmd
     .command('login')
     .description('Configure access token')
-    .action(withErrorHandling(async () => {
-      const token = await promptForAccessToken();
-      await auth.setAccessToken(token);
-      client.clearApi();
-
-      try {
-        const user = await client.getUser();
-        outputJson({
-          message: 'Successfully authenticated',
-          user: { id: user?.id },
-        });
-      } catch (error) {
-        await auth.deleteAccessToken();
+    .action(
+      withErrorHandling(async () => {
+        const token = await promptForAccessToken();
+        await auth.setAccessToken(token);
         client.clearApi();
-        throw error;
-      }
-    }));
+
+        try {
+          const user = await client.getUser();
+          outputJson({
+            message: 'Successfully authenticated',
+            user: { id: user?.id },
+          });
+        } catch (error) {
+          await auth.deleteAccessToken();
+          client.clearApi();
+          throw error;
+        }
+      })
+    );
 
   cmd
     .command('status')
     .description('Check authentication status')
-    .action(withErrorHandling(async () => {
-      const isAuthenticated = await auth.isAuthenticated();
+    .action(
+      withErrorHandling(async () => {
+        const isAuthenticated = await auth.isAuthenticated();
 
-      if (!isAuthenticated) {
-        outputJson({ authenticated: false, message: 'Not authenticated' });
-        return;
-      }
+        if (!isAuthenticated) {
+          outputJson({ authenticated: false, message: 'Not authenticated' });
+          return;
+        }
 
-      try {
-        const user = await client.getUser();
-        outputJson({ authenticated: true, user: { id: user?.id } });
-      } catch (error) {
-        outputJson({ authenticated: false, message: 'Token exists but is invalid' });
-      }
-    }));
+        try {
+          const user = await client.getUser();
+          outputJson({ authenticated: true, user: { id: user?.id } });
+        } catch {
+          outputJson({ authenticated: false, message: 'Token exists but is invalid' });
+        }
+      })
+    );
 
   cmd
     .command('logout')
     .description('Remove stored credentials')
-    .action(withErrorHandling(async () => {
-      await auth.logout();
-      client.clearApi();
-      outputJson({ message: 'Successfully logged out' });
-    }));
+    .action(
+      withErrorHandling(async () => {
+        await auth.logout();
+        client.clearApi();
+        outputJson({ message: 'Successfully logged out' });
+      })
+    );
 
   return cmd;
 }

@@ -13,20 +13,6 @@ export async function promptForAccessToken(): Promise<string> {
   return token.trim();
 }
 
-export async function promptForBudget(
-  budgets: Array<{ id: string; name: string }>,
-): Promise<string> {
-  const { budgetId } = await inquirer.prompt([
-    {
-      type: 'list',
-      name: 'budgetId',
-      message: 'Select a budget:',
-      choices: budgets.map((b) => ({ name: b.name, value: b.id })),
-    },
-  ]);
-  return budgetId;
-}
-
 export async function promptForConfirmation(message: string): Promise<boolean> {
   const { confirmed } = await inquirer.prompt([
     {
