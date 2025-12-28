@@ -2,9 +2,6 @@ import * as ynab from 'ynab';
 import { config } from './config.js';
 import { YnabCliError, handleYnabError, sanitizeApiError } from './errors.js';
 import { auth } from './auth.js';
-import dotenv from 'dotenv';
-
-dotenv.config();
 
 type TransactionTypeFilter = 'uncategorized' | 'unapproved' | undefined;
 
