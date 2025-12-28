@@ -1,220 +1,136 @@
 # YNAB CLI
 
 [![npm version](https://img.shields.io/npm/v/@stephendolan/ynab-cli.svg)](https://www.npmjs.com/package/@stephendolan/ynab-cli)
-[![npm downloads](https://img.shields.io/npm/dm/@stephendolan/ynab-cli.svg)](https://www.npmjs.com/package/@stephendolan/ynab-cli)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Bun](https://img.shields.io/badge/Bun-%3E%3D1.0-black)](https://bun.sh)
 
-A command-line interface for You Need a Budget (YNAB) designed to enable LLMs (Claude, ChatGPT, etc.) and developers to quickly interface with YNAB budgets, make changes, and audit financial data.
-
-## Features
-
-- **LLM-First Design**: JSON output by default for easy parsing and integration with AI assistants
-- **Advanced Filtering**: Built-in filters reduce need for external tools like `jq` - filter by approval status, amount ranges, field selection, and search capabilities
-- **Comprehensive Coverage**: Support for all major YNAB API endpoints
-- **Type Safety**: Built with TypeScript for robust error handling
-- **Raw API Access**: Fallback command for any operation not covered by convenience commands
-- **Simple Authentication**: Uses personal access tokens stored securely in OS keychain
+A command-line interface for YNAB designed for LLMs and developers. JSON output by default with built-in filtering.
 
 ## Installation
 
-Requires [Bun](https://bun.sh) runtime.
+Requires [Bun](https://bun.sh).
 
 ```bash
-# Install globally with bun (recommended)
 bun install -g @stephendolan/ynab-cli
 
-# Or run directly without installing
+# Or run without installing
 bunx @stephendolan/ynab-cli budgets list
-npx @stephendolan/ynab-cli budgets list  # also works
 ```
 
-### Linux Prerequisites
-
-Requires `libsecret` for keychain storage:
+<details>
+<summary>Linux: requires libsecret for keychain storage</summary>
 
 ```bash
-# Ubuntu/Debian
-sudo apt-get install libsecret-1-dev
-
-# Fedora/RHEL
-sudo dnf install libsecret-devel
-
-# Arch Linux
-sudo pacman -S libsecret
+sudo apt-get install libsecret-1-dev  # Ubuntu/Debian
+sudo dnf install libsecret-devel      # Fedora/RHEL
+sudo pacman -S libsecret              # Arch
 ```
 
-Without `libsecret`, use the `YNAB_API_KEY` environment variable instead.
-
-### From Source
-
-```bash
-git clone https://github.com/stephendolan/ynab-cli.git
-cd ynab-cli
-bun install
-bun run link  # Build and link globally
-```
+Without libsecret, use `YNAB_API_KEY` environment variable instead.
+</details>
 
 ## Authentication
 
-Set your YNAB personal access token using the CLI or environment variables:
-
 ```bash
-ynab auth login    # Interactive token entry, stored in OS keychain
-ynab auth status   # Check authentication status
-ynab auth logout   # Remove stored credentials
+ynab auth login    # Store token in OS keychain
+ynab auth status   # Check authentication
+ynab auth logout   # Remove credentials
 ```
 
-Or use environment variables (recommended for development):
+Or set `YNAB_API_KEY` environment variable.
 
-```env
-YNAB_API_KEY=your_personal_access_token
-YNAB_BUDGET_ID=your_default_budget_id  # Optional
-```
+## Commands
 
-## Usage
-
-### Global Flags
+### Budgets
 
 ```bash
---compact, -c          # Minified JSON output (single line)
+ynab budgets list
+ynab budgets view [id]
+ynab budgets set-default <id>
 ```
 
-### Commands
-
-#### User
+### Accounts
 
 ```bash
-ynab user info    # Get authenticated user information
+ynab accounts list
+ynab accounts view <id>
+ynab accounts transactions <id>
 ```
 
-#### Budgets
+### Categories
 
 ```bash
-ynab budgets list                 # List all budgets
-ynab budgets view [id]            # View budget details
-ynab budgets settings [id]        # View budget settings
-ynab budgets set-default <id>     # Set default budget
-```
-
-#### Accounts
-
-```bash
-ynab accounts list                # List all accounts
-ynab accounts view <id>           # View account details
-ynab accounts transactions <id>   # List transactions for account
-```
-
-#### Categories
-
-```bash
-ynab categories list                            # List all categories
-ynab categories view <id>                       # View category details
+ynab categories list
+ynab categories view <id>
 ynab categories budget <id> --month <YYYY-MM> --amount <amount>
-ynab categories transactions <id>               # List transactions for category
+ynab categories transactions <id>
 ```
 
-#### Transactions
+### Transactions
 
 ```bash
-# List and filter
-ynab transactions list
-ynab transactions list --account <id>
-ynab transactions list --category <id>
-ynab transactions list --payee <id>
-ynab transactions list --since <YYYY-MM-DD> --until <YYYY-MM-DD>
-ynab transactions list --approved=false
-ynab transactions list --min-amount 100 --max-amount 500
-ynab transactions list --status=cleared,reconciled
+# List with filters
+ynab transactions list --account <id> --since <YYYY-MM-DD>
+ynab transactions list --approved=false --min-amount 100
 ynab transactions list --fields id,date,amount,memo
 
 # Search
 ynab transactions search --memo "coffee"
 ynab transactions search --payee-name "Amazon"
-ynab transactions search --amount 42.50
 
-# CRUD operations
+# CRUD
 ynab transactions view <id>
-ynab transactions create
 ynab transactions create --account <id> --amount <amount> --date <YYYY-MM-DD>
 ynab transactions update <id> --amount <amount>
 ynab transactions delete <id>
-ynab transactions import
-ynab transactions split <id> --splits '[{"amount": -50.00, "category_id": "xxx", "memo": "..."}]'
+ynab transactions split <id> --splits '[{"amount": -50.00, "category_id": "xxx"}]'
 ```
 
-#### Scheduled Transactions
+### Payees
 
 ```bash
-ynab scheduled list        # List all scheduled transactions
-ynab scheduled view <id>   # View scheduled transaction
-ynab scheduled delete <id> # Delete scheduled transaction
+ynab payees list
+ynab payees view <id>
+ynab payees update <id> --name <name>
+ynab payees transactions <id>
 ```
 
-#### Payees
+### Months
 
 ```bash
-ynab payees list                        # List all payees
-ynab payees view <id>                   # View payee details
-ynab payees update <id> --name <name>   # Rename payee
-ynab payees locations <id>              # List locations for payee
-ynab payees transactions <id>           # List transactions for payee
+ynab months list
+ynab months view <YYYY-MM>
 ```
 
-#### Months
+### Scheduled Transactions
 
 ```bash
-ynab months list            # List all budget months
-ynab months view <YYYY-MM>  # View specific month details
+ynab scheduled list
+ynab scheduled view <id>
+ynab scheduled delete <id>
 ```
 
-#### Raw API Access
+### Raw API Access
 
 ```bash
-ynab api <method> <path> [--data <json>]
-
-# Examples:
 ynab api GET /budgets
-ynab api GET /budgets/{budget_id}/transactions
 ynab api POST /budgets/{budget_id}/transactions --data '{"transaction": {...}}'
 ```
 
-## Output Format
+## Output
 
-All commands return JSON by default:
+All commands return JSON. Use `--compact` for minified output.
 
-- **Lists**: Arrays of objects (not wrapped)
-- **Single items**: Objects directly
-- **Errors**: `{"error": {"name": "...", "detail": "...", "statusCode": 400}}`
-
-## Currency Format
-
-**All amounts are in dollars.** The CLI automatically converts YNAB's internal milliunit format (1000 = $1.00) in both input and output.
-
-- Input: `--min-amount 100` means $100
-- Output: `"amount": -555.28` means -$555.28
+**Amounts are in dollars** (not YNAB's internal milliunits). `--min-amount 100` means $100.
 
 ## API Limitations
 
-The YNAB API does not support:
+The YNAB API does not support creating categories, category groups, or payees. Use the web or mobile app for these.
 
-- Creating categories, category groups, or payees
-- Updating accounts (beyond initial creation)
-
-Use the YNAB web or mobile app for these operations.
-
-## API Rate Limits
-
-The YNAB API enforces a rate limit of **200 requests per hour** per access token. When exceeded, the API returns HTTP 429 errors.
-
-**If you hit the rate limit:**
-- Wait 5-10 minutes before retrying (the limit uses a rolling 60-minute window)
-- For batch operations, add delays between requests: `sleep 20` in shell loops ensures ~180 requests/hour
+Rate limit: 200 requests/hour per token. If exceeded, wait 5-10 minutes.
 
 ## References
 
 - [YNAB API Documentation](https://api.ynab.com/)
-- [YNAB JavaScript SDK](https://github.com/ynab/ynab-sdk-js)
 - [Specification](./SPEC.md)
 
 ## License
