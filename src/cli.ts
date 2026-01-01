@@ -12,6 +12,7 @@ import { createScheduledCommand } from './commands/scheduled.js';
 import { createPayeesCommand } from './commands/payees.js';
 import { createMonthsCommand } from './commands/months.js';
 import { createApiCommand } from './commands/api.js';
+import { createMcpCommand } from './commands/mcp.js';
 
 declare const __VERSION__: string;
 
@@ -39,5 +40,6 @@ program.addCommand(createScheduledCommand());
 program.addCommand(createPayeesCommand());
 program.addCommand(createMonthsCommand());
 program.addCommand(createApiCommand());
+program.addCommand(createMcpCommand());
 
 program.parse();
