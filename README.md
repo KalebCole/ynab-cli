@@ -45,6 +45,7 @@ Or set `YNAB_API_KEY` environment variable.
 ```bash
 ynab budgets list
 ynab budgets view [id]
+ynab budgets settings [id]
 ynab budgets set-default <id>
 ```
 
@@ -91,6 +92,7 @@ ynab transactions split <id> --splits '[{"amount": -50.00, "category_id": "xxx"}
 ynab payees list
 ynab payees view <id>
 ynab payees update <id> --name <name>
+ynab payees locations <id>
 ynab payees transactions <id>
 ```
 
@@ -114,6 +116,14 @@ ynab scheduled delete <id>
 ```bash
 ynab api GET /budgets
 ynab api POST /budgets/{budget_id}/transactions --data '{"transaction": {...}}'
+```
+
+### MCP Server
+
+Run as an MCP server for AI agent integration:
+
+```bash
+ynab mcp
 ```
 
 ## Output
