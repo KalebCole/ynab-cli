@@ -62,6 +62,7 @@ ynab accounts transactions <id>
 ```bash
 ynab categories list
 ynab categories view <id>
+ynab categories update <id> --name <name> --note <note> --category-group-id <id> --goal-target <amount>
 ynab categories budget <id> --month <YYYY-MM> --amount <amount>
 ynab categories transactions <id>
 ```
