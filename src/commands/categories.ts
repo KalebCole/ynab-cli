@@ -58,11 +58,16 @@ export function createCategoriesCommand(): Command {
           } & CommandOptions
         ) => {
           // Validate at least one field is provided
-          if (!options.name && !options.note && !options.categoryGroupId && options.goalTarget === undefined) {
+          if (options.name === undefined && options.note === undefined && options.categoryGroupId === undefined && options.goalTarget === undefined) {
             throw new YnabCliError(
               'At least one field to update must be provided (--name, --note, --category-group-id, or --goal-target)',
               400
             );
+          }
+
+          // Validate name if provided
+          if (options.name !== undefined && options.name.trim() === '') {
+            throw new YnabCliError('Category name cannot be empty or whitespace', 400);
           }
 
           // Validate goal-target if provided
@@ -71,14 +76,14 @@ export function createCategoriesCommand(): Command {
           }
 
           const updateData: {
-            name?: string | null;
+            name?: string;
             note?: string | null;
             category_group_id?: string;
             goal_target?: number | null;
           } = {};
 
           if (options.name !== undefined) {
-            updateData.name = options.name.trim() || null;
+            updateData.name = options.name.trim();
           }
           if (options.note !== undefined) {
             updateData.note = options.note.trim() || null;
