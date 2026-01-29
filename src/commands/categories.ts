@@ -37,6 +37,64 @@ export function createCategoriesCommand(): Command {
     );
 
   cmd
+    .command('update')
+    .description('Update category details')
+    .argument('<id>', 'Category ID')
+    .option('--name <name>', 'New category name')
+    .option('--note <note>', 'Category note (use empty string to clear)')
+    .option('--category-group-id <id>', 'Move to a different category group')
+    .option('--goal-target <amount>', 'Goal target amount in dollars (ignored if category has no goal)', parseFloat)
+    .option('-b, --budget <id>', 'Budget ID')
+    .action(
+      withErrorHandling(
+        async (
+          id: string,
+          options: {
+            name?: string;
+            note?: string;
+            categoryGroupId?: string;
+            goalTarget?: number;
+            budget?: string;
+          } & CommandOptions
+        ) => {
+          if (options.name === undefined && options.note === undefined && options.categoryGroupId === undefined && options.goalTarget === undefined) {
+            throw new YnabCliError(
+              'At least one field to update must be provided (--name, --note, --category-group-id, or --goal-target)',
+              400
+            );
+          }
+
+          if (options.name !== undefined && options.name.trim() === '') {
+            throw new YnabCliError('Category name cannot be empty or whitespace', 400);
+          }
+
+          const updateData: {
+            name?: string;
+            note?: string | null;
+            category_group_id?: string;
+            goal_target?: number | null;
+          } = {};
+
+          if (options.name !== undefined) {
+            updateData.name = options.name.trim();
+          }
+          if (options.note !== undefined) {
+            updateData.note = options.note.trim() || null;
+          }
+          if (options.categoryGroupId !== undefined) {
+            updateData.category_group_id = options.categoryGroupId;
+          }
+          if (options.goalTarget !== undefined) {
+            updateData.goal_target = amountToMilliunits(options.goalTarget);
+          }
+
+          const category = await client.updateCategory(id, { category: updateData }, options.budget);
+          outputJson(category);
+        }
+      )
+    );
+
+  cmd
     .command('budget')
     .description('Set category budgeted amount for a month (overrides existing amount)')
     .argument('<id>', 'Category ID')

@@ -159,6 +159,15 @@ export class YnabClient {
     });
   }
 
+  async updateCategory(categoryId: string, data: ynab.PatchCategoryWrapper, budgetId?: string) {
+    return this.withErrorHandling(async () => {
+      const api = await this.getApi();
+      const id = await this.getBudgetId(budgetId);
+      const response = await api.categories.updateCategory(id, categoryId, data);
+      return response.data.category;
+    });
+  }
+
   async getPayees(budgetId?: string, lastKnowledgeOfServer?: number) {
     return this.withErrorHandling(async () => {
       const api = await this.getApi();
