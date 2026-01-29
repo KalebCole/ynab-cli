@@ -41,9 +41,9 @@ export function createCategoriesCommand(): Command {
     .description('Update category details')
     .argument('<id>', 'Category ID')
     .option('--name <name>', 'New category name')
-    .option('--note <note>', 'New category note')
+    .option('--note <note>', 'Category note (use empty string to clear)')
     .option('--category-group-id <id>', 'Move to a different category group')
-    .option('--goal-target <amount>', 'Goal target amount (only if goal already exists)', parseFloat)
+    .option('--goal-target <amount>', 'Goal target amount in dollars (ignored if category has no goal)', parseFloat)
     .option('-b, --budget <id>', 'Budget ID')
     .action(
       withErrorHandling(
@@ -57,7 +57,6 @@ export function createCategoriesCommand(): Command {
             budget?: string;
           } & CommandOptions
         ) => {
-          // Validate at least one field is provided
           if (options.name === undefined && options.note === undefined && options.categoryGroupId === undefined && options.goalTarget === undefined) {
             throw new YnabCliError(
               'At least one field to update must be provided (--name, --note, --category-group-id, or --goal-target)',
@@ -65,14 +64,8 @@ export function createCategoriesCommand(): Command {
             );
           }
 
-          // Validate name if provided
           if (options.name !== undefined && options.name.trim() === '') {
             throw new YnabCliError('Category name cannot be empty or whitespace', 400);
-          }
-
-          // Validate goal-target if provided
-          if (options.goalTarget !== undefined && isNaN(options.goalTarget)) {
-            throw new YnabCliError('Goal target must be a valid number', 400);
           }
 
           const updateData: {
@@ -88,7 +81,7 @@ export function createCategoriesCommand(): Command {
           if (options.note !== undefined) {
             updateData.note = options.note.trim() || null;
           }
-          if (options.categoryGroupId) {
+          if (options.categoryGroupId !== undefined) {
             updateData.category_group_id = options.categoryGroupId;
           }
           if (options.goalTarget !== undefined) {

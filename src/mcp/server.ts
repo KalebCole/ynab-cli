@@ -3,7 +3,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod';
 import { client } from '../lib/api-client.js';
 import { auth } from '../lib/auth.js';
-import { convertMilliunitsToAmounts } from '../lib/utils.js';
+import { amountToMilliunits, convertMilliunitsToAmounts } from '../lib/utils.js';
 
 const toolRegistry = [
   { name: 'list_budgets', description: 'List all budgets in the YNAB account' },
@@ -12,6 +12,7 @@ const toolRegistry = [
   { name: 'get_account', description: 'Get detailed information about a specific account' },
   { name: 'list_categories', description: 'List all category groups and categories in a budget' },
   { name: 'get_category', description: 'Get detailed information about a specific category' },
+  { name: 'update_category', description: 'Update category name, note, group, or goal target' },
   { name: 'list_transactions', description: 'List transactions with optional filtering' },
   { name: 'get_transaction', description: 'Get detailed information about a specific transaction' },
   { name: 'list_transactions_by_account', description: 'List transactions for a specific account' },
@@ -82,6 +83,27 @@ server.tool(
     budgetId: z.string().optional().describe('Budget ID (uses default if not specified)'),
   },
   async ({ categoryId, budgetId }) => currencyResponse(await client.getCategory(categoryId, budgetId))
+);
+
+server.tool(
+  'update_category',
+  'Update category name, note, group, or goal target',
+  {
+    categoryId: z.string().describe('Category ID'),
+    name: z.string().optional().describe('New category name'),
+    note: z.string().optional().describe('Category note (use empty string to clear)'),
+    categoryGroupId: z.string().optional().describe('Move to a different category group'),
+    goalTarget: z.number().optional().describe('Goal target amount in dollars (ignored if category has no goal)'),
+    budgetId: z.string().optional().describe('Budget ID (uses default if not specified)'),
+  },
+  async ({ categoryId, name, note, categoryGroupId, goalTarget, budgetId }) => {
+    const updateData: Record<string, unknown> = {};
+    if (name !== undefined) updateData.name = name.trim();
+    if (note !== undefined) updateData.note = note.trim() || null;
+    if (categoryGroupId !== undefined) updateData.category_group_id = categoryGroupId;
+    if (goalTarget !== undefined) updateData.goal_target = amountToMilliunits(goalTarget);
+    return currencyResponse(await client.updateCategory(categoryId, { category: updateData }, budgetId));
+  }
 );
 
 server.tool(
