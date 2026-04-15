@@ -2,6 +2,7 @@
 
 import { Command } from 'commander';
 import { setOutputOptions } from './lib/output.js';
+import { setGlobalRetryEnabled } from './lib/retry.js';
 import { createAuthCommand } from './commands/auth.js';
 import { createUserCommand } from './commands/user.js';
 import { createBudgetsCommand } from './commands/budgets.js';
@@ -23,11 +24,15 @@ program
   .description('A command-line interface for You Need a Budget (YNAB)')
   .version(__VERSION__)
   .option('-c, --compact', 'Minified JSON output (single line)')
+  .option('--no-retry', 'Disable automatic retry on 429/5xx errors')
   .hook('preAction', (thisCommand) => {
     const options = thisCommand.opts();
     setOutputOptions({
       compact: options.compact,
     });
+    if (options.retry === false) {
+      setGlobalRetryEnabled(false);
+    }
   });
 
 program.addCommand(createAuthCommand());

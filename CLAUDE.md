@@ -84,6 +84,21 @@ All API calls go through `YnabClient.withErrorHandling()` which catches errors a
 }
 ```
 
+### Exit Codes
+
+| Code | Meaning | Trigger |
+|------|---------|--------|
+| 0 | Success | — |
+| 1 | Generic / unknown error | Unrecognised errors |
+| 2 | Authentication error | 401, `not_authorized`, subscription/trial/scope errors |
+| 3 | Not found | 404, `not_found`, `resource_not_found` |
+| 4 | Rate limited | 429, `too_many_requests` |
+| 5 | Validation error | 400/422, `bad_request`, `conflict`, Zod failures |
+| 6 | Server error | 5xx, `internal_server_error`, `service_unavailable` |
+| 7 | Budget / config missing | No default budget set, config errors |
+
+Scripts can branch on `$?` without parsing JSON output.
+
 ## Adding New Commands
 
 1. Create or modify file in src/commands/

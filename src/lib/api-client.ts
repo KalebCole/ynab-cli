@@ -2,6 +2,7 @@ import * as ynab from 'ynab';
 import { config } from './config.js';
 import { YnabCliError, sanitizeApiError } from './errors.js';
 import { auth } from './auth.js';
+import { withRetry } from './retry.js';
 
 type TransactionTypeFilter = 'uncategorized' | 'unapproved' | undefined;
 
@@ -57,13 +58,13 @@ export class YnabClient {
 
   async getUser() {
     const api = await this.getApi();
-    const response = await api.user.getUser();
+    const response = await withRetry(() => api.user.getUser());
     return response.data.user;
   }
 
   async getBudgets(includeAccounts = false) {
     const api = await this.getApi();
-    const response = await api.budgets.getBudgets(includeAccounts);
+    const response = await withRetry(() => api.budgets.getBudgets(includeAccounts));
     return {
       budgets: response.data.budgets,
       server_knowledge: 0,
@@ -73,7 +74,7 @@ export class YnabClient {
   async getBudget(budgetId?: string, lastKnowledgeOfServer?: number) {
     const api = await this.getApi();
     const id = await this.getBudgetId(budgetId);
-    const response = await api.budgets.getBudgetById(id, lastKnowledgeOfServer);
+    const response = await withRetry(() => api.budgets.getBudgetById(id, lastKnowledgeOfServer));
     return {
       budget: response.data.budget,
       server_knowledge: response.data.server_knowledge,
@@ -83,14 +84,14 @@ export class YnabClient {
   async getBudgetSettings(budgetId?: string) {
     const api = await this.getApi();
     const id = await this.getBudgetId(budgetId);
-    const response = await api.budgets.getBudgetSettingsById(id);
+    const response = await withRetry(() => api.budgets.getBudgetSettingsById(id));
     return response.data.settings;
   }
 
   async getAccounts(budgetId?: string, lastKnowledgeOfServer?: number) {
     const api = await this.getApi();
     const id = await this.getBudgetId(budgetId);
-    const response = await api.accounts.getAccounts(id, lastKnowledgeOfServer);
+    const response = await withRetry(() => api.accounts.getAccounts(id, lastKnowledgeOfServer));
     return {
       accounts: response.data.accounts,
       server_knowledge: response.data.server_knowledge,
@@ -100,14 +101,14 @@ export class YnabClient {
   async getAccount(accountId: string, budgetId?: string) {
     const api = await this.getApi();
     const id = await this.getBudgetId(budgetId);
-    const response = await api.accounts.getAccountById(id, accountId);
+    const response = await withRetry(() => api.accounts.getAccountById(id, accountId));
     return response.data.account;
   }
 
   async getCategories(budgetId?: string, lastKnowledgeOfServer?: number) {
     const api = await this.getApi();
     const id = await this.getBudgetId(budgetId);
-    const response = await api.categories.getCategories(id, lastKnowledgeOfServer);
+    const response = await withRetry(() => api.categories.getCategories(id, lastKnowledgeOfServer));
     return {
       category_groups: response.data.category_groups,
       server_knowledge: response.data.server_knowledge,
@@ -117,7 +118,7 @@ export class YnabClient {
   async getCategory(categoryId: string, budgetId?: string) {
     const api = await this.getApi();
     const id = await this.getBudgetId(budgetId);
-    const response = await api.categories.getCategoryById(id, categoryId);
+    const response = await withRetry(() => api.categories.getCategoryById(id, categoryId));
     return response.data.category;
   }
 
@@ -129,21 +130,21 @@ export class YnabClient {
   ) {
     const api = await this.getApi();
     const id = await this.getBudgetId(budgetId);
-    const response = await api.categories.updateMonthCategory(id, month, categoryId, data);
+    const response = await withRetry(() => api.categories.updateMonthCategory(id, month, categoryId, data));
     return response.data.category;
   }
 
   async updateCategory(categoryId: string, data: ynab.PatchCategoryWrapper, budgetId?: string) {
     const api = await this.getApi();
     const id = await this.getBudgetId(budgetId);
-    const response = await api.categories.updateCategory(id, categoryId, data);
+    const response = await withRetry(() => api.categories.updateCategory(id, categoryId, data));
     return response.data.category;
   }
 
   async getPayees(budgetId?: string, lastKnowledgeOfServer?: number) {
     const api = await this.getApi();
     const id = await this.getBudgetId(budgetId);
-    const response = await api.payees.getPayees(id, lastKnowledgeOfServer);
+    const response = await withRetry(() => api.payees.getPayees(id, lastKnowledgeOfServer));
     return {
       payees: response.data.payees,
       server_knowledge: response.data.server_knowledge,
@@ -153,28 +154,28 @@ export class YnabClient {
   async getPayee(payeeId: string, budgetId?: string) {
     const api = await this.getApi();
     const id = await this.getBudgetId(budgetId);
-    const response = await api.payees.getPayeeById(id, payeeId);
+    const response = await withRetry(() => api.payees.getPayeeById(id, payeeId));
     return response.data.payee;
   }
 
   async updatePayee(payeeId: string, data: ynab.PatchPayeeWrapper, budgetId?: string) {
     const api = await this.getApi();
     const id = await this.getBudgetId(budgetId);
-    const response = await api.payees.updatePayee(id, payeeId, data);
+    const response = await withRetry(() => api.payees.updatePayee(id, payeeId, data));
     return response.data.payee;
   }
 
   async getPayeeLocationsByPayee(payeeId: string, budgetId?: string) {
     const api = await this.getApi();
     const id = await this.getBudgetId(budgetId);
-    const response = await api.payeeLocations.getPayeeLocationsByPayee(id, payeeId);
+    const response = await withRetry(() => api.payeeLocations.getPayeeLocationsByPayee(id, payeeId));
     return response.data.payee_locations;
   }
 
   async getBudgetMonths(budgetId?: string, lastKnowledgeOfServer?: number) {
     const api = await this.getApi();
     const id = await this.getBudgetId(budgetId);
-    const response = await api.months.getBudgetMonths(id, lastKnowledgeOfServer);
+    const response = await withRetry(() => api.months.getBudgetMonths(id, lastKnowledgeOfServer));
     return {
       months: response.data.months,
       server_knowledge: response.data.server_knowledge,
@@ -184,7 +185,7 @@ export class YnabClient {
   async getBudgetMonth(month: string, budgetId?: string) {
     const api = await this.getApi();
     const id = await this.getBudgetId(budgetId);
-    const response = await api.months.getBudgetMonth(id, month);
+    const response = await withRetry(() => api.months.getBudgetMonth(id, month));
     return response.data.month;
   }
 
@@ -196,12 +197,12 @@ export class YnabClient {
   }) {
     const api = await this.getApi();
     const id = await this.getBudgetId(params.budgetId);
-    const response = await api.transactions.getTransactions(
+    const response = await withRetry(() => api.transactions.getTransactions(
       id,
       params.sinceDate,
       params.type as TransactionTypeFilter,
       params.lastKnowledgeOfServer
-    );
+    ));
     return {
       transactions: response.data.transactions,
       server_knowledge: response.data.server_knowledge,
@@ -219,13 +220,13 @@ export class YnabClient {
   ) {
     const api = await this.getApi();
     const id = await this.getBudgetId(params.budgetId);
-    const response = await api.transactions.getTransactionsByAccount(
+    const response = await withRetry(() => api.transactions.getTransactionsByAccount(
       id,
       accountId,
       params.sinceDate,
       params.type as TransactionTypeFilter,
       params.lastKnowledgeOfServer
-    );
+    ));
     return {
       transactions: response.data.transactions,
       server_knowledge: response.data.server_knowledge,
@@ -243,13 +244,13 @@ export class YnabClient {
   ) {
     const api = await this.getApi();
     const id = await this.getBudgetId(params.budgetId);
-    const response = await api.transactions.getTransactionsByCategory(
+    const response = await withRetry(() => api.transactions.getTransactionsByCategory(
       id,
       categoryId,
       params.sinceDate,
       params.type as TransactionTypeFilter,
       params.lastKnowledgeOfServer
-    );
+    ));
     return {
       transactions: response.data.transactions,
       server_knowledge: response.data.server_knowledge,
@@ -267,13 +268,13 @@ export class YnabClient {
   ) {
     const api = await this.getApi();
     const id = await this.getBudgetId(params.budgetId);
-    const response = await api.transactions.getTransactionsByPayee(
+    const response = await withRetry(() => api.transactions.getTransactionsByPayee(
       id,
       payeeId,
       params.sinceDate,
       params.type as TransactionTypeFilter,
       params.lastKnowledgeOfServer
-    );
+    ));
     return {
       transactions: response.data.transactions,
       server_knowledge: response.data.server_knowledge,
@@ -283,14 +284,14 @@ export class YnabClient {
   async getTransaction(transactionId: string, budgetId?: string) {
     const api = await this.getApi();
     const id = await this.getBudgetId(budgetId);
-    const response = await api.transactions.getTransactionById(id, transactionId);
+    const response = await withRetry(() => api.transactions.getTransactionById(id, transactionId));
     return response.data.transaction;
   }
 
   async createTransaction(transactionData: ynab.PostTransactionsWrapper, budgetId?: string) {
     const api = await this.getApi();
     const id = await this.getBudgetId(budgetId);
-    const response = await api.transactions.createTransaction(id, transactionData);
+    const response = await withRetry(() => api.transactions.createTransaction(id, transactionData), { idempotent: false });
     return response.data.transaction;
   }
 
@@ -301,7 +302,7 @@ export class YnabClient {
   ) {
     const api = await this.getApi();
     const id = await this.getBudgetId(budgetId);
-    const response = await api.transactions.updateTransaction(id, transactionId, transactionData);
+    const response = await withRetry(() => api.transactions.updateTransaction(id, transactionId, transactionData));
     return response.data.transaction;
   }
 
@@ -311,7 +312,7 @@ export class YnabClient {
   ) {
     const api = await this.getApi();
     const id = await this.getBudgetId(budgetId);
-    const response = await api.transactions.updateTransactions(id, transactions);
+    const response = await withRetry(() => api.transactions.updateTransactions(id, transactions));
     return {
       transactions: response.data.transactions,
       transaction_ids: response.data.transaction_ids,
@@ -322,24 +323,24 @@ export class YnabClient {
   async deleteTransaction(transactionId: string, budgetId?: string) {
     const api = await this.getApi();
     const id = await this.getBudgetId(budgetId);
-    const response = await api.transactions.deleteTransaction(id, transactionId);
+    const response = await withRetry(() => api.transactions.deleteTransaction(id, transactionId));
     return response.data.transaction;
   }
 
   async importTransactions(budgetId?: string) {
     const api = await this.getApi();
     const id = await this.getBudgetId(budgetId);
-    const response = await api.transactions.importTransactions(id);
+    const response = await withRetry(() => api.transactions.importTransactions(id), { idempotent: false });
     return response.data.transaction_ids;
   }
 
   async getScheduledTransactions(budgetId?: string, lastKnowledgeOfServer?: number) {
     const api = await this.getApi();
     const id = await this.getBudgetId(budgetId);
-    const response = await api.scheduledTransactions.getScheduledTransactions(
+    const response = await withRetry(() => api.scheduledTransactions.getScheduledTransactions(
       id,
       lastKnowledgeOfServer
-    );
+    ));
     return {
       scheduled_transactions: response.data.scheduled_transactions,
       server_knowledge: response.data.server_knowledge,
@@ -349,20 +350,20 @@ export class YnabClient {
   async getScheduledTransaction(scheduledTransactionId: string, budgetId?: string) {
     const api = await this.getApi();
     const id = await this.getBudgetId(budgetId);
-    const response = await api.scheduledTransactions.getScheduledTransactionById(
+    const response = await withRetry(() => api.scheduledTransactions.getScheduledTransactionById(
       id,
       scheduledTransactionId
-    );
+    ));
     return response.data.scheduled_transaction;
   }
 
   async deleteScheduledTransaction(scheduledTransactionId: string, budgetId?: string) {
     const api = await this.getApi();
     const id = await this.getBudgetId(budgetId);
-    const response = await api.scheduledTransactions.deleteScheduledTransaction(
+    const response = await withRetry(() => api.scheduledTransactions.deleteScheduledTransaction(
       id,
       scheduledTransactionId
-    );
+    ));
     return response.data.scheduled_transaction;
   }
 
@@ -387,18 +388,30 @@ export class YnabClient {
       throw new YnabCliError(`Unsupported HTTP method: ${method}`, 400);
     }
 
-    const response = await fetch(url, {
-      method: httpMethod,
-      headers,
-      ...(hasBody && { body: JSON.stringify(data) }),
-    });
+    // POST is non-idempotent; GET/PUT/PATCH/DELETE are idempotent by HTTP spec
+    const isIdempotent = httpMethod !== 'POST';
 
-    if (!response.ok) {
-      const errorData = (await response.json()) as Record<string, unknown>;
-      throw { error: sanitizeApiError(errorData.error || errorData) };
-    }
+    const result = await withRetry(async () => {
+      const response = await fetch(url, {
+        method: httpMethod,
+        headers,
+        ...(hasBody && { body: JSON.stringify(data) }),
+      });
 
-    return await response.json();
+      if (!response.ok) {
+        const errorData = (await response.json()) as Record<string, unknown>;
+        const err: Record<string, unknown> = {
+          error: sanitizeApiError(errorData.error || errorData),
+          status: response.status,
+          headers: Object.fromEntries(response.headers.entries()),
+        };
+        throw err;
+      }
+
+      return await response.json();
+    }, { idempotent: isIdempotent });
+
+    return result;
   }
 }
 

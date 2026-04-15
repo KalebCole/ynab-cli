@@ -1,6 +1,59 @@
 import type { YnabError } from '../types/index.js';
 import { outputJson } from './output.js';
 
+/**
+ * Granular exit codes for scripting and agent automation.
+ *
+ * 0 = success
+ * 1 = generic / unknown error
+ * 2 = authentication error (401)
+ * 3 = not found (404)
+ * 4 = rate limited (429)
+ * 5 = validation error (400 / 422 / Zod)
+ * 6 = server error (5xx)
+ * 7 = budget not found / config missing
+ */
+export const ExitCode = {
+  SUCCESS: 0,
+  GENERIC: 1,
+  AUTH: 2,
+  NOT_FOUND: 3,
+  RATE_LIMITED: 4,
+  VALIDATION: 5,
+  SERVER: 6,
+  CONFIG: 7,
+} as const;
+
+export type ExitCodeValue = (typeof ExitCode)[keyof typeof ExitCode];
+
+/** Map YNAB API error names to exit codes. */
+const ERROR_EXIT_CODES: Record<string, ExitCodeValue> = {
+  bad_request: ExitCode.VALIDATION,
+  not_authorized: ExitCode.AUTH,
+  subscription_lapsed: ExitCode.AUTH,
+  trial_expired: ExitCode.AUTH,
+  unauthorized_scope: ExitCode.AUTH,
+  data_limit_reached: ExitCode.AUTH,
+  not_found: ExitCode.NOT_FOUND,
+  resource_not_found: ExitCode.NOT_FOUND,
+  conflict: ExitCode.VALIDATION,
+  too_many_requests: ExitCode.RATE_LIMITED,
+  internal_server_error: ExitCode.SERVER,
+  service_unavailable: ExitCode.SERVER,
+};
+
+function exitCodeForError(name: string, statusCode?: number): ExitCodeValue {
+  if (name in ERROR_EXIT_CODES) return ERROR_EXIT_CODES[name];
+  if (statusCode !== undefined) {
+    if (statusCode === 401) return ExitCode.AUTH;
+    if (statusCode === 404) return ExitCode.NOT_FOUND;
+    if (statusCode === 429) return ExitCode.RATE_LIMITED;
+    if (statusCode === 400 || statusCode === 422) return ExitCode.VALIDATION;
+    if (statusCode >= 500) return ExitCode.SERVER;
+  }
+  return ExitCode.GENERIC;
+}
+
 export class YnabCliError extends Error {
   constructor(
     message: string,
@@ -80,9 +133,10 @@ function enhanceRateLimitMessage(detail: string): string {
 
 function formatErrorResponse(name: string, detail: string, statusCode: number): never {
   const enhancedDetail = name === 'too_many_requests' ? enhanceRateLimitMessage(detail) : detail;
+  const exitCode = exitCodeForError(name, statusCode);
 
   outputJson({ error: { name, detail: enhancedDetail, statusCode } });
-  process.exit(1);
+  process.exit(exitCode);
 }
 
 export function handleYnabError(error: unknown): never {
@@ -103,7 +157,17 @@ export function handleYnabError(error: unknown): never {
 
   if (error instanceof YnabCliError) {
     const sanitized = sanitizeErrorMessage(error.message);
-    formatErrorResponse('cli_error', sanitized, error.statusCode || 1);
+    const code = error.statusCode || 1;
+    // Budget/config errors get ExitCode.CONFIG
+    const isBudgetError =
+      error.message.includes('budget') ||
+      error.message.includes('config') ||
+      error.message.includes('No default budget');
+    if (isBudgetError) {
+      outputJson({ error: { name: 'cli_error', detail: sanitized, statusCode: code } });
+      process.exit(ExitCode.CONFIG);
+    }
+    formatErrorResponse('cli_error', sanitized, code);
   }
 
   const sanitized = sanitizeErrorMessage(errorObj.message || 'An unexpected error occurred');
