@@ -1,0 +1,80 @@
+{
+  "repo": "KalebCole/ynab-cli",
+  "upstream": "stephendolan/ynab-cli",
+  "discord_thread": "1493805164245553172",
+  "prs": [
+    {
+      "id": 1,
+      "branch": "feat/granular-exit-codes",
+      "title": "feat: granular exit codes for error types",
+      "description": "Map YNAB API error types to distinct exit codes (0-7) instead of always exiting 1. Enables agents and scripts to branch on auth failures vs not-found vs rate limits without parsing output. See ARCHITECTURE-GAPS.md Gap 5 for the full exit code scheme.",
+      "files": [
+        "src/lib/errors.ts"
+      ],
+      "complexity": "low",
+      "status": "pending",
+      "pr_url": null,
+      "completed_at": null
+    },
+    {
+      "id": 2,
+      "branch": "feat/retry-backoff",
+      "title": "feat: automatic retry with exponential backoff on 429/5xx",
+      "description": "Add retry logic with exponential backoff + jitter for 429 (rate limit) and 5xx (server error) responses. YNAB's 200 req/hr limit means agents will hit 429 regularly. Add --no-retry flag to opt out. See ARCHITECTURE-GAPS.md Gap 2.",
+      "files": [
+        "src/lib/retry.ts",
+        "src/lib/api-client.ts"
+      ],
+      "complexity": "medium",
+      "status": "pending",
+      "pr_url": null,
+      "completed_at": null
+    },
+    {
+      "id": 3,
+      "branch": "feat/dry-run",
+      "title": "feat: --dry-run flag for all write operations",
+      "description": "Add --dry-run to all write commands (transactions create/update/delete/split/batch-update/import, categories update/budget, payees update, scheduled delete, api POST/PUT/PATCH/DELETE). Outputs the payload that would be sent without executing. Essential for agent safety. See ARCHITECTURE-GAPS.md Gap 3.",
+      "files": [
+        "src/lib/command-utils.ts",
+        "src/commands/transactions.ts",
+        "src/commands/categories.ts",
+        "src/commands/payees.ts",
+        "src/commands/scheduled.ts",
+        "src/commands/api.ts"
+      ],
+      "complexity": "medium",
+      "status": "pending",
+      "pr_url": null,
+      "completed_at": null
+    },
+    {
+      "id": 4,
+      "branch": "feat/format-flag",
+      "title": "feat: --format flag for table/csv/yaml output",
+      "description": "Add --format flag (json|table|csv|yaml) to all read commands. JSON remains default. Table for human use, CSV for spreadsheet export, YAML for config workflows. See ARCHITECTURE-GAPS.md Gap 4.",
+      "files": [
+        "src/lib/output.ts",
+        "src/lib/formatters.ts",
+        "src/cli.ts"
+      ],
+      "complexity": "medium",
+      "status": "pending",
+      "pr_url": null,
+      "completed_at": null
+    },
+    {
+      "id": 5,
+      "branch": "feat/skills",
+      "title": "feat: add agent skill definitions (skills/ directory)",
+      "description": "Add structured SKILL.md files for agent orchestration. Covers shared conventions (auth, flags, errors) and each resource (budgets, accounts, transactions, categories, payees, months, scheduled). Already generated in skills/ directory \u2014 this PR just commits them.",
+      "files": [
+        "skills/"
+      ],
+      "complexity": "low",
+      "status": "done",
+      "pr_url": "https://github.com/KalebCole/ynab-cli/pull/1",
+      "completed_at": "2026-04-14"
+    }
+  ]
+}
