@@ -43,7 +43,20 @@ export function formatTable(data: unknown): string {
  * Format data as CSV with proper escaping
  */
 export function formatCsv(data: unknown): string {
-  if (!Array.isArray(data) || data.length === 0) {
+  if (data === null || data === undefined) {
+    return 'No data';
+  }
+
+  // Wrap single objects in an array for uniform processing
+  if (!Array.isArray(data)) {
+    if (typeof data === 'object') {
+      data = [data];
+    } else {
+      return String(data);
+    }
+  }
+
+  if ((data as unknown[]).length === 0) {
     return 'No data';
   }
 
