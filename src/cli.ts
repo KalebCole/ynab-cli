@@ -23,10 +23,12 @@ program
   .description('A command-line interface for You Need a Budget (YNAB)')
   .version(__VERSION__)
   .option('-c, --compact', 'Minified JSON output (single line)')
+  .option('--format <type>', 'Output format: json, table, csv, yaml', 'json')
   .hook('preAction', (thisCommand) => {
     const options = thisCommand.opts();
     setOutputOptions({
       compact: options.compact,
+      format: options.format,
     });
   });
 

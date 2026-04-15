@@ -15,6 +15,7 @@ export interface ApiErrorResponse {
 
 export interface OutputOptions {
   compact?: boolean;
+  format?: 'json' | 'table' | 'csv' | 'yaml';
 }
 
 export interface CommandOptions extends OutputOptions {
