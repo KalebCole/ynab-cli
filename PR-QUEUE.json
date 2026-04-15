@@ -44,9 +44,9 @@
         "src/commands/api.ts"
       ],
       "complexity": "medium",
-      "status": "pending",
-      "pr_url": null,
-      "completed_at": null
+      "status": "done",
+      "pr_url": "https://github.com/KalebCole/ynab-cli/pull/4",
+      "completed_at": "2026-04-15T03:47:00Z"
     },
     {
       "id": 4,

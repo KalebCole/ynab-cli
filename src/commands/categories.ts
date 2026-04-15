@@ -3,7 +3,7 @@ import { client } from '../lib/api-client.js';
 import { outputJson } from '../lib/output.js';
 import { YnabCliError } from '../lib/errors.js';
 import { amountToMilliunits, applyFieldSelection } from '../lib/utils.js';
-import { withErrorHandling } from '../lib/command-utils.js';
+import { withErrorHandling, dryRun } from '../lib/command-utils.js';
 import { parseDate } from '../lib/dates.js';
 import type { CommandOptions } from '../types/index.js';
 
@@ -45,6 +45,7 @@ export function createCategoriesCommand(): Command {
     .option('--category-group-id <id>', 'Move to a different category group')
     .option('--goal-target <amount>', 'Goal target amount in dollars (ignored if category has no goal)', parseFloat)
     .option('-b, --budget <id>', 'Budget ID')
+    .option('--dry-run', 'Show the payload that would be sent without executing')
     .action(
       withErrorHandling(
         async (
@@ -55,6 +56,7 @@ export function createCategoriesCommand(): Command {
             categoryGroupId?: string;
             goalTarget?: number;
             budget?: string;
+            dryRun?: boolean;
           } & CommandOptions
         ) => {
           if (options.name === undefined && options.note === undefined && options.categoryGroupId === undefined && options.goalTarget === undefined) {
@@ -88,6 +90,11 @@ export function createCategoriesCommand(): Command {
             updateData.goal_target = amountToMilliunits(options.goalTarget);
           }
 
+          if (options.dryRun) {
+            dryRun('PATCH', `categories/${id}`, { category: updateData });
+            return;
+          }
+
           const category = await client.updateCategory(id, { category: updateData }, options.budget);
           outputJson(category);
         }
@@ -101,6 +108,7 @@ export function createCategoriesCommand(): Command {
     .requiredOption('--month <month>', 'Budget month (e.g., 2025-07-01)')
     .requiredOption('--amount <amount>', 'Total budgeted amount to set (e.g., 100.50)', parseFloat)
     .option('-b, --budget <id>', 'Budget ID')
+    .option('--dry-run', 'Show the payload that would be sent without executing')
     .action(
       withErrorHandling(
         async (
@@ -109,6 +117,7 @@ export function createCategoriesCommand(): Command {
             month: string;
             amount: number;
             budget?: string;
+            dryRun?: boolean;
           } & CommandOptions
         ) => {
           if (isNaN(options.amount)) {
@@ -116,8 +125,15 @@ export function createCategoriesCommand(): Command {
           }
 
           const milliunits = amountToMilliunits(options.amount);
+          const monthDate = parseDate(options.month);
+
+          if (options.dryRun) {
+            dryRun('PATCH', `months/${monthDate}/categories/${id}`, { category: { budgeted: milliunits } });
+            return;
+          }
+
           const category = await client.updateMonthCategory(
-            parseDate(options.month),
+            monthDate,
             id,
             { category: { budgeted: milliunits } },
             options.budget

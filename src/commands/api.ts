@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import { client } from '../lib/api-client.js';
 import { outputJson } from '../lib/output.js';
 import { YnabCliError } from '../lib/errors.js';
-import { withErrorHandling } from '../lib/command-utils.js';
+import { withErrorHandling, dryRun } from '../lib/command-utils.js';
 import { validateApiData } from '../lib/schemas.js';
 import type { CommandOptions } from '../types/index.js';
 
@@ -16,13 +16,14 @@ export function createApiCommand(): Command {
     .argument('<path>', 'API path (e.g., /budgets or /budgets/{budget_id}/transactions)')
     .option('-b, --budget <id>', 'Budget ID (used to replace {budget_id} in path)')
     .option('--data <json>', 'JSON data for POST/PUT/PATCH requests')
+    .option('--dry-run', 'Show the payload that would be sent without executing')
     .description('Make raw API calls to YNAB')
     .action(
       withErrorHandling(
         async (
           method: string,
           path: string,
-          options: { budget?: string; data?: string } & CommandOptions
+          options: { budget?: string; data?: string; dryRun?: boolean } & CommandOptions
         ) => {
           const upperMethod = method.toUpperCase();
 
@@ -42,6 +43,15 @@ export function createApiCommand(): Command {
               throw new YnabCliError('Invalid JSON in --data parameter', 400);
             }
             data = validateApiData(parsedData);
+          }
+
+          if (options.dryRun) {
+            // Resolve {budget_id} placeholder like the real execution path
+            const resolvedPath = path.includes('{budget_id}')
+              ? path.replace('{budget_id}', await client.getBudgetId(options.budget))
+              : path;
+            dryRun(upperMethod, resolvedPath, data || {});
+            return;
           }
 
           const result = await client.rawApiCall(upperMethod, path, data, options.budget);

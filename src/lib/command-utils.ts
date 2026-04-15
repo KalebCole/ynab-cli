@@ -1,4 +1,5 @@
 import { handleYnabError, YnabCliError } from './errors.js';
+import { outputJson } from './output.js';
 
 export function withErrorHandling<TArgs extends unknown[], R>(
   fn: (...args: TArgs) => Promise<R>
@@ -35,4 +36,17 @@ export function buildUpdateObject<T>(
   }
 
   return result;
+}
+
+export function dryRun(
+  method: string,
+  resource: string,
+  payload: Record<string, unknown>
+): void {
+  outputJson({
+    dry_run: true,
+    method: method.toUpperCase(),
+    resource,
+    payload,
+  });
 }

@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import { client } from '../lib/api-client.js';
 import { outputJson } from '../lib/output.js';
 import { YnabCliError } from '../lib/errors.js';
-import { withErrorHandling } from '../lib/command-utils.js';
+import { withErrorHandling, dryRun } from '../lib/command-utils.js';
 import { applyFieldSelection } from '../lib/utils.js';
 import { parseDate } from '../lib/dates.js';
 import type { CommandOptions } from '../types/index.js';
@@ -42,11 +42,17 @@ export function createPayeesCommand(): Command {
     .argument('<id>', 'Payee ID')
     .requiredOption('--name <name>', 'New payee name')
     .option('-b, --budget <id>', 'Budget ID')
+    .option('--dry-run', 'Show the payload that would be sent without executing')
     .action(
       withErrorHandling(
-        async (id: string, options: { name: string; budget?: string } & CommandOptions) => {
+        async (id: string, options: { name: string; budget?: string; dryRun?: boolean } & CommandOptions) => {
           if (!options.name?.trim()) {
             throw new YnabCliError('Name cannot be empty', 400);
+          }
+
+          if (options.dryRun) {
+            dryRun('PATCH', `payees/${id}`, { payee: { name: options.name } });
+            return;
           }
 
           const payee = await client.updatePayee(

@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import { client } from '../lib/api-client.js';
 import { outputJson } from '../lib/output.js';
-import { withErrorHandling, requireConfirmation } from '../lib/command-utils.js';
+import { withErrorHandling, requireConfirmation, dryRun } from '../lib/command-utils.js';
 import type { CommandOptions } from '../types/index.js';
 
 export function createScheduledCommand(): Command {
@@ -42,10 +42,17 @@ export function createScheduledCommand(): Command {
     .argument('<id>', 'Scheduled transaction ID')
     .option('-b, --budget <id>', 'Budget ID')
     .option('-y, --yes', 'Skip confirmation')
+    .option('--dry-run', 'Show the operation that would be performed without executing')
     .action(
       withErrorHandling(
-        async (id: string, options: { budget?: string; yes?: boolean } & CommandOptions) => {
+        async (id: string, options: { budget?: string; yes?: boolean; dryRun?: boolean } & CommandOptions) => {
           requireConfirmation('scheduled transaction', options.yes);
+
+          if (options.dryRun) {
+            dryRun('DELETE', `scheduled-transactions/${id}`, {});
+            return;
+          }
+
           const scheduledTransaction = await client.deleteScheduledTransaction(id, options.budget);
           outputJson({
             message: 'Scheduled transaction deleted',
