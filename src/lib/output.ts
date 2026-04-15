@@ -30,11 +30,12 @@ export function output(data: unknown, options: OutputOptions = {}): void {
       outputString = formatYaml(convertedData);
       break;
     case 'json':
-    default:
       outputString = mergedOptions.compact
         ? JSON.stringify(convertedData)
         : JSON.stringify(convertedData, null, 2);
       break;
+    default:
+      throw new Error(`Unsupported output format: '${format}'. Supported formats: json, table, csv, yaml`);
   }
 
   console.log(outputString);

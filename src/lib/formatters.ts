@@ -16,8 +16,11 @@ export function formatTable(data: unknown): string {
       output += message + '\n';
     };
 
-    console.table(data);
-    console.log = originalLog;
+    try {
+      console.table(data);
+    } finally {
+      console.log = originalLog;
+    }
 
     return output.trim();
   } else if (typeof data === 'object' && data !== null) {
@@ -95,6 +98,12 @@ export function formatCsv(data: unknown): string {
  * Escape CSV values that contain commas, quotes, or newlines
  */
 function escapeCsvValue(value: string): string {
+  // Neutralize spreadsheet formula injection
+  const formulaPrefixes = ['=', '+', '-', '@', '\t'];
+  if (formulaPrefixes.some(ch => value.startsWith(ch))) {
+    value = "'" + value;
+  }
+
   if (value.includes(',') || value.includes('"') || value.includes('\n') || value.includes('\r')) {
     return `"${value.replace(/"/g, '""')}"`;
   }
