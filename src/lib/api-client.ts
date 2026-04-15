@@ -291,7 +291,7 @@ export class YnabClient {
   async createTransaction(transactionData: ynab.PostTransactionsWrapper, budgetId?: string) {
     const api = await this.getApi();
     const id = await this.getBudgetId(budgetId);
-    const response = await withRetry(() => api.transactions.createTransaction(id, transactionData));
+    const response = await withRetry(() => api.transactions.createTransaction(id, transactionData), { idempotent: false });
     return response.data.transaction;
   }
 
@@ -330,7 +330,7 @@ export class YnabClient {
   async importTransactions(budgetId?: string) {
     const api = await this.getApi();
     const id = await this.getBudgetId(budgetId);
-    const response = await withRetry(() => api.transactions.importTransactions(id));
+    const response = await withRetry(() => api.transactions.importTransactions(id), { idempotent: false });
     return response.data.transaction_ids;
   }
 
@@ -388,6 +388,9 @@ export class YnabClient {
       throw new YnabCliError(`Unsupported HTTP method: ${method}`, 400);
     }
 
+    // POST is non-idempotent; GET/PUT/PATCH/DELETE are idempotent by HTTP spec
+    const isIdempotent = httpMethod !== 'POST';
+
     const result = await withRetry(async () => {
       const response = await fetch(url, {
         method: httpMethod,
@@ -397,12 +400,16 @@ export class YnabClient {
 
       if (!response.ok) {
         const errorData = (await response.json()) as Record<string, unknown>;
-        const err: Record<string, unknown> = { error: sanitizeApiError(errorData.error || errorData), status: response.status };
+        const err: Record<string, unknown> = {
+          error: sanitizeApiError(errorData.error || errorData),
+          status: response.status,
+          headers: Object.fromEntries(response.headers.entries()),
+        };
         throw err;
       }
 
       return await response.json();
-    });
+    }, { idempotent: isIdempotent });
 
     return result;
   }

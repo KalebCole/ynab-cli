@@ -10,12 +10,20 @@ export interface RetryOptions {
   baseDelayMs?: number;
   /** Whether retry is enabled (default: true) */
   enabled?: boolean;
+  /**
+   * Whether the wrapped operation is idempotent (default: true).
+   * When false, only 429 (rate limit) errors are retried — 5xx server
+   * errors are thrown immediately to avoid duplicating side-effects
+   * (e.g. creating the same transaction twice).
+   */
+  idempotent?: boolean;
 }
 
 const DEFAULT_OPTIONS: Required<RetryOptions> = {
   maxRetries: 3,
   baseDelayMs: 1000,
   enabled: true,
+  idempotent: true,
 };
 
 /** Global flag to disable retry (set by --no-retry) */
@@ -71,9 +79,13 @@ function extractRetryAfter(error: unknown): number | undefined {
   return undefined;
 }
 
-function isRetryable(statusCode: number | undefined): boolean {
+function isRetryable(statusCode: number | undefined, idempotent: boolean): boolean {
   if (statusCode === undefined) return false;
-  return statusCode === 429 || (statusCode >= 500 && statusCode < 600);
+  // 429 rate limits are always safe to retry (request was not processed)
+  if (statusCode === 429) return true;
+  // 5xx only retried for idempotent operations to avoid duplicate side-effects
+  if (statusCode >= 500 && statusCode < 600) return idempotent;
+  return false;
 }
 
 function sleep(ms: number): Promise<void> {
@@ -94,6 +106,7 @@ function computeDelay(attempt: number, baseDelayMs: number, statusCode: number, 
 /**
  * Wrap an async function with retry logic.
  * Retries on 429 (rate limit) and 5xx (server error) only.
+ * For non-idempotent operations (idempotent: false), only 429 is retried.
  */
 export async function withRetry<T>(
   fn: () => Promise<T>,
@@ -114,7 +127,7 @@ export async function withRetry<T>(
       lastError = error;
       const statusCode = extractStatusCode(error);
 
-      if (!isRetryable(statusCode) || attempt === options.maxRetries) {
+      if (!isRetryable(statusCode, options.idempotent) || attempt === options.maxRetries) {
         throw error;
       }
 
