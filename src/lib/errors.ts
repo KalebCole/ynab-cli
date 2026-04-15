@@ -60,7 +60,9 @@ const ERROR_STATUS_CODES: Record<string, number> = {
 
 function exitCodeForError(name: string, statusCode?: number): ExitCodeValue {
   if (name in ERROR_EXIT_CODES) return ERROR_EXIT_CODES[name];
-  if (statusCode !== undefined) {
+  // Only use status-code fallback when the name is a known YNAB error
+  // (i.e., the status code came from the API, not a synthetic default).
+  if (statusCode !== undefined && name in ERROR_STATUS_CODES) {
     if (statusCode === 401) return ExitCode.AUTH;
     if (statusCode === 404) return ExitCode.NOT_FOUND;
     if (statusCode === 429) return ExitCode.RATE_LIMITED;
@@ -163,7 +165,7 @@ export function handleYnabError(error: unknown): never {
       error.message.toLowerCase().includes('budget') ||
       error.message.toLowerCase().includes('config') ||
       error.message.toLowerCase().includes('no default budget');
-    if (isBudgetError) {
+    if (isBudgetConfigError) {
       outputJson({ error: { name: 'cli_error', detail: sanitized, statusCode: code } });
       process.exit(ExitCode.CONFIG);
     }
