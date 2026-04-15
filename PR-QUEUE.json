@@ -12,9 +12,9 @@
         "src/lib/errors.ts"
       ],
       "complexity": "low",
-      "status": "pending",
-      "pr_url": null,
-      "completed_at": null
+      "status": "done",
+      "pr_url": "https://github.com/KalebCole/ynab-cli/pull/3",
+      "completed_at": "2026-04-15"
     },
     {
       "id": 2,
