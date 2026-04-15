@@ -20,7 +20,8 @@ metadata:
 ynab transactions list [--budget <id>] [--account <id>] [--since <date>]
 
 # Search & filter
-ynab transactions search --query "coffee" --limit 10
+ynab transactions search --memo "coffee" --since "30 days ago"
+ynab transactions search --payee-name "Starbucks" --amount 5.50
 ynab transactions list --min-amount 50 --max-amount 200
 ynab transactions list --status cleared,uncleared
 
@@ -31,12 +32,12 @@ ynab transactions update <id> --memo "Updated memo"
 ynab transactions delete <id> --yes
 
 # Batch operations
-ynab transactions batch-update --data '[{"id": "...", "memo": "bulk update"}]'
+ynab transactions batch-update --transactions '[{"id": "...", "memo": "bulk update"}]'
 ynab transactions split <id> --splits '[{"amount": -15, "category_id": "..."}, {...}]'
 
 # Analysis
 ynab transactions summary --since 2024-01-01
-ynab transactions find-transfers --since 2024-01-01
+ynab transactions find-transfers <transaction_id>
 ```
 
 ## Core Commands
@@ -89,7 +90,7 @@ ynab transactions list --last-knowledge 42
 ### Batch Operations
 Update multiple transactions efficiently:
 ```bash
-ynab transactions batch-update --data '[
+ynab transactions batch-update --transactions '[
   {"id": "tx1", "memo": "Updated memo 1"},
   {"id": "tx2", "category_id": "new-category"}
 ]'
@@ -114,9 +115,10 @@ ynab transactions split <transaction_id> --splits '[
 ## Search Capabilities
 
 The `search` command provides fuzzy text matching:
-- Searches across: payee names, memos, category names
+- Searches across: payee names, memos
 - Case-insensitive partial matching
-- Combine with filters: `--search coffee --category groceries --since "1 month ago"`
+- Requires at least one of: `--memo`, `--payee-name`, or `--amount`
+- Combine with date filters: `--since` and `--until`
 
 ## Security Notes
 
@@ -140,17 +142,17 @@ ynab transactions list --category uncategorized --limit 20
 ### Bulk Categorization
 ```bash
 # Search first
-ynab transactions search --query "amazon" --fields id,memo
+ynab transactions search --payee-name "amazon" --fields id,memo
 
 # Then batch update
-ynab transactions batch-update --data '[
+ynab transactions batch-update --transactions '[
   {"id": "tx1", "category_id": "shopping-category"}
 ]'
 ```
 
 ### Transfer Detection
 ```bash
-ynab transactions find-transfers --since "3 months ago"
+ynab transactions find-transfers <transaction_id> --days 7
 ```
 
 ## Integration with Other Resources

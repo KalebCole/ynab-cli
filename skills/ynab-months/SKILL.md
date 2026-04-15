@@ -21,8 +21,8 @@ ynab months list [--budget <id>]
 
 # View specific month details
 ynab months view 2024-04-01 [--budget <id>]
-ynab months view current [--budget <id>]
-ynab months view previous [--budget <id>]
+ynab months view 2024-04-01 [--budget <id>]
+ynab months view 2024-03-01 [--budget <id>]
 ```
 
 ## Core Commands
@@ -44,10 +44,10 @@ Each month contains:
 ### Current Month Status
 ```bash
 # Quick overview of current month
-ynab months view current
+ynab months view 2024-04-01
 
 # Focus on specific fields
-ynab months view current --fields month,income,budgeted,activity,to_be_budgeted
+ynab months view 2024-04-01 --fields month,income,budgeted,activity,to_be_budgeted
 ```
 
 ### Historical Analysis
@@ -69,7 +69,7 @@ ynab months view 2024-04-01 | jq '.categories[] | {name, budgeted, activity, bal
 ynab months view 2024-04-01 | jq '.categories[] | select(.balance < 0)'
 
 # Find unbudgeted categories with activity
-ynab months view current | jq '.categories[] | select(.budgeted == 0 and .activity != 0)'
+ynab months view 2024-04-01 | jq '.categories[] | select(.budgeted == 0 and .activity != 0)'
 ```
 
 ## Key Monthly Metrics
@@ -95,13 +95,13 @@ ynab months view current | jq '.categories[] | select(.budgeted == 0 and .activi
 ### Monthly Budget Health Check
 ```bash
 # 1. Check current month status
-ynab months view current
+ynab months view 2024-04-01
 
 # 2. Identify problem areas
-ynab months view current | jq '.categories[] | select(.balance < 0) | {name, balance}'
+ynab months view 2024-04-01 | jq '.categories[] | select(.balance < 0) | {name, balance}'
 
 # 3. Check unassigned money
-ynab months view current | jq '.to_be_budgeted'
+ynab months view 2024-04-01 | jq '.to_be_budgeted'
 ```
 
 ### Spending Trend Analysis
@@ -122,7 +122,7 @@ done
 ### Budget vs Reality Gap Analysis
 ```bash
 # Find categories consistently over/under budget
-ynab months view current | jq '.categories[] | {
+ynab months view 2024-04-01 | jq '.categories[] | {
   name,
   budgeted, 
   activity,
@@ -146,21 +146,19 @@ ynab categories transactions $category_id --since 2024-04-01 --until 2024-04-30
 ### Budget Planning
 ```bash
 # Review last month to plan current
-ynab months view previous | jq '.categories[] | {name, budgeted, activity, balance}'
+ynab months view 2024-03-01 | jq '.categories[] | {name, budgeted, activity, balance}'
 
 # Set budgets for current month based on patterns
-ynab categories budget <category_id> --month current --budgeted 500.00
+ynab categories budget <category_id> --month 2024-04-01 --amount 500.00
 ```
 
 ## Time Period Helpers
 
-The CLI accepts several date formats for month selection:
+The `view` command requires a concrete date (first day of month, YYYY-MM-DD format). Aliases like `current` or `previous` are **not supported**.
 
 ```bash
-ynab months view current        # Current calendar month
-ynab months view previous       # Previous calendar month  
+ynab months view 2024-04-01        # Current calendar month
 ynab months view 2024-04-01     # Specific month (always use 1st day)
-ynab months view "last month"   # Alternative syntax
 ```
 
 ## Delta Sync Support
@@ -180,7 +178,7 @@ ynab months list --last-knowledge <previous_server_knowledge>
 ### Monthly Budget Report
 ```bash
 #!/bin/bash
-month=${1:-current}
+month=${1:-2024-04-01}
 
 echo "=== YNAB Monthly Budget Report: $month ==="
 echo

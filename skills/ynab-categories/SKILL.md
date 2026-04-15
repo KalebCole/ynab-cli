@@ -21,7 +21,7 @@ ynab categories list [--budget <id>]
 ynab categories view <category_id> [--budget <id>]
 
 # Budget allocation
-ynab categories budget <category_id> --month 2024-04-01 --budgeted 500.00
+ynab categories budget <category_id> --month 2024-04-01 --amount 500.00
 
 # Update category details  
 ynab categories update <category_id> --name "New Name" --note "Updated note"
@@ -62,7 +62,7 @@ Category Groups
 ### Setting Monthly Budgets
 ```bash
 # Budget $500 for groceries in April 2024
-ynab categories budget <category_id> --month 2024-04-01 --budgeted 500.00
+ynab categories budget <category_id> --month 2024-04-01 --amount 500.00
 
 # View current budget vs activity
 ynab categories view <category_id>
@@ -114,9 +114,9 @@ ynab categories view <overspent_category_id>
 ### Monthly Budget Setup
 ```bash
 # Set budgets for recurring categories
-ynab categories budget <rent_id> --month 2024-05-01 --budgeted 1200.00
-ynab categories budget <groceries_id> --month 2024-05-01 --budgeted 400.00
-ynab categories budget <gas_id> --month 2024-05-01 --budgeted 150.00
+ynab categories budget <rent_id> --month 2024-05-01 --amount 1200.00
+ynab categories budget <groceries_id> --month 2024-05-01 --amount 400.00
+ynab categories budget <gas_id> --month 2024-05-01 --amount 150.00
 ```
 
 ### Category Analysis
@@ -137,7 +137,7 @@ ynab categories transactions <category_id> --min-amount 100
 ```bash
 # Move transactions to different category
 ynab transactions list --category <old_category> --fields id
-ynab transactions batch-update --data '[{"id": "tx1", "category_id": "<new_category>"}]'
+ynab transactions batch-update --transactions '[{"id": "tx1", "category_id": "<new_category>"}]'
 ```
 
 ### With Monthly Reports
