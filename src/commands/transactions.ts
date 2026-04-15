@@ -12,7 +12,7 @@ import {
   type TransactionLike,
   type SummaryTransaction,
 } from '../lib/utils.js';
-import { withErrorHandling, requireConfirmation, buildUpdateObject } from '../lib/command-utils.js';
+import { withErrorHandling, requireConfirmation, buildUpdateObject, dryRun } from '../lib/command-utils.js';
 import { validateTransactionSplits, validateBatchUpdates } from '../lib/schemas.js';
 import { parseDate, todayDate } from '../lib/dates.js';
 import type { CommandOptions } from '../types/index.js';
@@ -169,6 +169,7 @@ export function createTransactionsCommand(): Command {
     .option('--memo <memo>', 'Memo')
     .option('--cleared <status>', 'Cleared status (cleared, uncleared, reconciled)')
     .option('--approved', 'Mark as approved')
+    .option('--dry-run', 'Show the payload that would be sent without executing')
     .action(
       withErrorHandling(
         async (
@@ -183,9 +184,16 @@ export function createTransactionsCommand(): Command {
             memo?: string;
             cleared?: string;
             approved?: boolean;
+            dryRun?: boolean;
           } & CommandOptions
         ) => {
           const transactionData = buildTransactionData(options);
+
+          if (options.dryRun) {
+            dryRun('POST', 'transactions', { transaction: transactionData });
+            return;
+          }
+
           const transaction = await client.createTransaction(
             { transaction: transactionData },
             options.budget
@@ -209,9 +217,10 @@ export function createTransactionsCommand(): Command {
     .option('--memo <memo>', 'Memo')
     .option('--cleared <status>', 'Cleared status')
     .option('--approved', 'Mark as approved')
+    .option('--dry-run', 'Show the payload that would be sent without executing')
     .action(
       withErrorHandling(
-        async (id: string, options: TransactionOptions & { budget?: string } & CommandOptions) => {
+        async (id: string, options: TransactionOptions & { budget?: string; dryRun?: boolean } & CommandOptions) => {
           const transactionData = buildUpdateObject(options, {
             account: 'account_id',
             date: 'date',
@@ -225,6 +234,11 @@ export function createTransactionsCommand(): Command {
 
           if (options.amount !== undefined) {
             transactionData.amount = amountToMilliunits(options.amount);
+          }
+
+          if (options.dryRun) {
+            dryRun('PUT', `transactions/${id}`, { transaction: transactionData });
+            return;
           }
 
           const transaction = await client.updateTransaction(
@@ -243,10 +257,17 @@ export function createTransactionsCommand(): Command {
     .argument('<id>', 'Transaction ID')
     .option('-b, --budget <id>', 'Budget ID')
     .option('-y, --yes', 'Skip confirmation')
+    .option('--dry-run', 'Show the operation that would be performed without executing')
     .action(
       withErrorHandling(
-        async (id: string, options: { budget?: string; yes?: boolean } & CommandOptions) => {
+        async (id: string, options: { budget?: string; yes?: boolean; dryRun?: boolean } & CommandOptions) => {
           requireConfirmation('transaction', options.yes);
+
+          if (options.dryRun) {
+            dryRun('DELETE', `transactions/${id}`, {});
+            return;
+          }
+
           const transaction = await client.deleteTransaction(id, options.budget);
           outputJson({ message: 'Transaction deleted', transaction });
         }
@@ -257,8 +278,14 @@ export function createTransactionsCommand(): Command {
     .command('import')
     .description('Import transactions')
     .option('-b, --budget <id>', 'Budget ID')
+    .option('--dry-run', 'Show the operation that would be performed without executing')
     .action(
-      withErrorHandling(async (options: CommandOptions) => {
+      withErrorHandling(async (options: { dryRun?: boolean } & CommandOptions) => {
+        if (options.dryRun) {
+          dryRun('POST', 'transactions/import', {});
+          return;
+        }
+
         const transactionIds = await client.importTransactions(options.budget);
         outputJson({ transaction_ids: transactionIds });
       })
@@ -276,11 +303,12 @@ export function createTransactionsCommand(): Command {
     )
     .option('-b, --budget <id>', 'Budget ID')
     .option('-f, --force', 'Force update of already-split transactions by deleting and recreating')
+    .option('--dry-run', 'Show the payload that would be sent without executing')
     .action(
       withErrorHandling(
         async (
           id: string,
-          options: { splits: string; budget?: string; force?: boolean } & CommandOptions
+          options: { splits: string; budget?: string; force?: boolean; dryRun?: boolean } & CommandOptions
         ) => {
           let parsedSplits;
           try {
@@ -295,6 +323,41 @@ export function createTransactionsCommand(): Command {
             ...split,
             amount: amountToMilliunits(split.amount),
           }));
+
+          if (options.dryRun) {
+            const existingTransaction = await client.getTransaction(id, options.budget);
+            const isAlreadySplit =
+              existingTransaction.subtransactions && existingTransaction.subtransactions.length > 0;
+
+            if (isAlreadySplit && options.force) {
+              // Show delete operation first, then create
+              dryRun('DELETE', `transactions/${id}`, {});
+              console.log(); // Add separator line
+              dryRun('POST', 'transactions', {
+                transaction: {
+                  account_id: existingTransaction.account_id,
+                  date: existingTransaction.date,
+                  amount: existingTransaction.amount,
+                  payee_id: existingTransaction.payee_id,
+                  payee_name: existingTransaction.payee_name,
+                  category_id: null,
+                  memo: existingTransaction.memo,
+                  cleared: existingTransaction.cleared,
+                  approved: existingTransaction.approved,
+                  flag_color: existingTransaction.flag_color,
+                  subtransactions: splitsInMilliunits,
+                },
+              });
+            } else {
+              dryRun('PUT', `transactions/${id}`, {
+                transaction: {
+                  category_id: null,
+                  subtransactions: splitsInMilliunits,
+                },
+              });
+            }
+            return;
+          }
 
           const existingTransaction = await client.getTransaction(id, options.budget);
           const isAlreadySplit =
@@ -357,9 +420,10 @@ export function createTransactionsCommand(): Command {
       'JSON array of transaction updates. Each must have "id" or "import_id". Example: [{"id": "tx1", "approved": true, "category_id": "cat1"}]'
     )
     .option('-b, --budget <id>', 'Budget ID')
+    .option('--dry-run', 'Show the payload that would be sent without executing')
     .action(
       withErrorHandling(
-        async (options: { transactions: string; budget?: string } & CommandOptions) => {
+        async (options: { transactions: string; budget?: string; dryRun?: boolean } & CommandOptions) => {
           let parsed;
           try {
             parsed = JSON.parse(options.transactions);
@@ -375,6 +439,11 @@ export function createTransactionsCommand(): Command {
               ? { amount: amountToMilliunits(update.amount) }
               : {}),
           }));
+
+          if (options.dryRun) {
+            dryRun('PATCH', 'transactions', { transactions: transactionsInMilliunits });
+            return;
+          }
 
           const result = await client.updateTransactions(
             { transactions: transactionsInMilliunits as Parameters<typeof client.updateTransactions>[0]['transactions'] },
