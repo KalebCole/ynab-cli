@@ -51,7 +51,7 @@ export function createPayeesCommand(): Command {
           }
 
           if (options.dryRun) {
-            dryRun('PUT', `payees/${id}`, { payee: { name: options.name } });
+            dryRun('PATCH', `payees/${id}`, { payee: { name: options.name } });
             return;
           }
 

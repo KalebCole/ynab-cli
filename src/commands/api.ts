@@ -46,7 +46,11 @@ export function createApiCommand(): Command {
           }
 
           if (options.dryRun) {
-            dryRun(upperMethod, path, data || {});
+            // Resolve {budget_id} placeholder like the real execution path
+            const resolvedPath = path.includes('{budget_id}')
+              ? path.replace('{budget_id}', await client.getBudgetId(options.budget))
+              : path;
+            dryRun(upperMethod, resolvedPath, data || {});
             return;
           }
 

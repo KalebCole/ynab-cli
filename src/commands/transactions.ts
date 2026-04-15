@@ -329,24 +329,44 @@ export function createTransactionsCommand(): Command {
             const isAlreadySplit =
               existingTransaction.subtransactions && existingTransaction.subtransactions.length > 0;
 
+            if (isAlreadySplit && !options.force) {
+              throw new YnabCliError(
+                'Transaction is already split. YNAB API does not support updating split transactions. ' +
+                  'Use --force to delete and recreate the transaction with new splits.',
+                400
+              );
+            }
+
             if (isAlreadySplit && options.force) {
-              // Show delete operation first, then create
-              dryRun('DELETE', `transactions/${id}`, {});
-              console.log(); // Add separator line
-              dryRun('POST', 'transactions', {
-                transaction: {
-                  account_id: existingTransaction.account_id,
-                  date: existingTransaction.date,
-                  amount: existingTransaction.amount,
-                  payee_id: existingTransaction.payee_id,
-                  payee_name: existingTransaction.payee_name,
-                  category_id: null,
-                  memo: existingTransaction.memo,
-                  cleared: existingTransaction.cleared,
-                  approved: existingTransaction.approved,
-                  flag_color: existingTransaction.flag_color,
-                  subtransactions: splitsInMilliunits,
-                },
+              // Emit a single JSON document with both steps
+              outputJson({
+                dry_run: true,
+                steps: [
+                  {
+                    method: 'DELETE',
+                    resource: `transactions/${id}`,
+                    payload: {},
+                  },
+                  {
+                    method: 'POST',
+                    resource: 'transactions',
+                    payload: {
+                      transaction: {
+                        account_id: existingTransaction.account_id,
+                        date: existingTransaction.date,
+                        amount: existingTransaction.amount,
+                        payee_id: existingTransaction.payee_id,
+                        payee_name: existingTransaction.payee_name,
+                        category_id: null,
+                        memo: existingTransaction.memo,
+                        cleared: existingTransaction.cleared,
+                        approved: existingTransaction.approved,
+                        flag_color: existingTransaction.flag_color,
+                        subtransactions: splitsInMilliunits,
+                      },
+                    },
+                  },
+                ],
               });
             } else {
               dryRun('PUT', `transactions/${id}`, {
